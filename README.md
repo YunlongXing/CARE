@@ -4,7 +4,7 @@ CARE is a Python research prototype for context-aware, security-preserving
 refactoring of C/C++ projects. It combines lightweight program analysis, an
 LLM-based patch proposal loop, and fail-closed correctness/security validation.
 
-![CARE system design](artifacts/figures/care_system_design_overview.pdf)
+![CARE system design](artifacts/figures/care_system_design_overview.png)
 
 ## Why CARE?
 
