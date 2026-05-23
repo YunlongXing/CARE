@@ -25,6 +25,10 @@ run.log.path
 /care-report.md
 /patches/
 
+# Local paper drafts and figure-generation workspace.
+# Public artifact copies live under artifacts/.
+docs/
+
 # Example build outputs
 examples/goto_refactor/test_goto
 examples/duplicate_check/test_duplicate_check

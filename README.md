@@ -105,10 +105,10 @@ traceability from each opportunity to its patch.
 
 ## Paper Artifacts
 
-This repository includes the current paper draft sources and curated artifacts:
+This repository includes curated public artifacts, but not the paper draft
+source. The local `docs/` workspace is intentionally ignored and is not synced
+to GitHub.
 
-- `docs/paper/sections/`: LaTeX section drafts.
-- `docs/paper/img/`: paper figures.
 - `artifacts/figures/`: publication-ready figure copies.
 - `artifacts/oss50/tables/`: evaluation tables in Markdown, CSV, JSON, and
   LaTeX form.
@@ -164,7 +164,6 @@ care/                 Python CARE prototype
 examples/             Small C examples
 tests/                Pytest suite
 scripts/              Benchmark and artifact scripts
-docs/paper/           LaTeX paper draft and figures
 artifacts/            Curated public paper artifacts
 benchmarks/           Lightweight benchmark config only
 ```
