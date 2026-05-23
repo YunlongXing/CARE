@@ -1,0 +1,51 @@
+id,name,status,download_status,source_files,functions,opportunities,duration_seconds,critical,high,medium,low
+openssl,OpenSSL,ok,existing,2223,20502,10163,331.735,10,216,9464,473
+curl,curl,ok,existing,973,5295,4026,71.415,0,277,3618,131
+redis,Redis,ok,existing,789,11337,4403,178.42,37,445,3823,98
+nginx,nginx,ok,existing,399,3187,2455,42.422,3,36,2337,79
+libuv,libuv,ok,existing,363,3217,888,19.239,5,291,536,56
+libevent,libevent,ok,existing,174,2552,1214,30.287,36,80,1048,50
+libgit2,libgit2,ok,existing,1171,11006,4495,140.014,2,195,3972,326
+jemalloc,jemalloc,ok,existing,390,3557,942,21.944,17,172,723,30
+memcached,memcached,ok,existing,96,1232,751,14.465,19,305,423,4
+sqlite,SQLite,ok,existing,357,9562,4325,182.798,13,364,3869,79
+lua,Lua,ok,existing,68,1329,138,4.239,0,15,122,1
+haproxy,HAProxy,ok,existing,700,8976,7909,342.069,25,862,6310,712
+jansson,Jansson,ok,existing,47,414,504,5.287,2,44,450,8
+make,GNU Make,ok,existing,73,644,641,7.253,6,181,449,5
+vim,Vim,ok,existing,283,11340,6835,225.042,10,297,6405,123
+neovim,Neovim,ok,existing,505,7000,3558,90.954,0,149,3293,116
+tmux,tmux,ok,existing,199,2465,1584,41.651,38,159,1361,26
+htop,htop,ok,existing,281,1548,567,9.423,30,55,473,9
+jq,jq,ok,existing,79,912,354,7.701,0,61,283,10
+libusb,libusb,ok,existing,76,995,730,12.135,3,336,366,25
+cjson,cJSON,ok,existing,99,1189,237,11.663,4,74,159,0
+zlib-ng,zlib-ng,ok,existing,242,701,228,3.159,1,112,111,4
+zlib,zlib,ok,existing,79,628,583,5.297,0,185,398,0
+lz4,LZ4,ok,existing,69,761,587,7.933,22,252,310,3
+zstd,Zstandard,ok,existing,275,3512,1775,62.965,39,627,1086,23
+expat,Expat,ok,existing,79,857,202,9.594,0,51,151,0
+libpng,libpng,ok,existing,101,1467,816,18.818,0,149,647,20
+libjpeg-turbo,libjpeg-turbo,ok,existing,332,1545,1012,17.35,11,153,826,22
+opus,Opus,ok,existing,402,1580,978,14.739,0,220,754,4
+flac,FLAC,ok,existing,206,1671,2549,47.262,10,285,2231,23
+ffmpeg,FFmpeg,ok,existing,4610,30431,17440,827.171,2,273,16778,387
+radare2,radare2,timeout,existing,2057,23322,0,1800.049,0,0,0,0
+fio,fio,ok,existing,369,3148,2152,57.274,16,867,1183,86
+jsoncpp,JsonCpp,ok,existing,25,436,37,4.56,0,3,34,0
+libyaml,LibYAML,ok,existing,24,229,518,3.343,2,68,444,4
+leveldb,LevelDB,ok,existing,133,1200,135,3.533,0,7,128,0
+snappy,Snappy,ok,existing,18,274,46,1.637,0,0,46,0
+fmt,fmt,ok,existing,72,3010,115,66.78,0,33,82,0
+spdlog,spdlog,ok,existing,149,1259,118,6.544,0,78,40,0
+googletest,GoogleTest,ok,existing,157,4990,126,46.414,0,28,98,0
+glfw,GLFW,ok,existing,97,1984,597,70.522,11,106,475,5
+sdl,SDL,ok,existing,1468,12405,5546,225.861,7,248,5233,58
+capnproto,Cap'n Proto,ok,existing,109,4218,86,91.252,2,0,84,0
+protobuf,Protocol Buffers,ok,existing,1231,24387,5129,1417.708,8,251,4849,21
+tesseract,Tesseract OCR,ok,existing,586,4973,1170,29.265,2,64,1099,5
+imagemagick,ImageMagick,ok,existing,704,6192,10293,167.937,0,43,10228,22
+libarchive,libarchive,ok,existing,755,4356,4725,173.525,89,1717,2845,74
+uthash,uthash,ok,existing,120,230,171,1.072,1,93,74,3
+mbedtls,Mbed TLS,ok,existing,131,1298,1790,27.884,0,53,1722,15
+wolfssl,wolfSSL,ok,existing,1217,17279,26461,1360.238,4,448,25905,104

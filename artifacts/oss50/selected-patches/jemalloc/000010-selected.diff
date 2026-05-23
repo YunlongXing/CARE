@@ -1,0 +1,13 @@
+--- a/test/unit/prof_recent.c
++++ b/test/unit/prof_recent.c
+@@ -640,6 +640,9 @@
+ 
+ 	while (data_p->count > 0) {
+-		free(data_p->ptrs[--data_p->count]);
++		void *ptr = data_p->ptrs[--data_p->count];
++		if (ptr != NULL) {
++			free(ptr);
++		}
+ 	}
+ 
+ 	return NULL;

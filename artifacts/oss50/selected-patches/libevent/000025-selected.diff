@@ -1,0 +1,10 @@
+--- a/test/regress_buffer.c
++++ b/test/regress_buffer.c
+@@ -1649,6 +1649,6 @@
+ 	cp = evbuffer_readln(evb, &sz, EVBUFFER_EOL_LF);
+ 	tt_line_eq("one line");
+-	free(cp); cp = NULL;
++	if (cp) { free(cp); cp = NULL; }
+ 	evbuffer_validate(evb);
+ 
+ 	/* the next call to readline should fail */

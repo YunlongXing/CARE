@@ -1,0 +1,23 @@
+\begin{table*}[t]
+    \centering
+    \caption{LLM-assisted review of accepted and rejected patches.}
+    \label{tab:llm-review}
+    \begin{tabular}{lrrrrrrrr}
+        \toprule
+        System & Reviewed & Correct & Likely & Incorrect & Uncertain & Strict & Lenient & Unsafe \\
+        \midrule
+        CARE & 31 & 7 & 24 & 0 & 0 & 22.58% & 100.00% & 0 \\
+        LLM-only & 5 & 2 & 3 & 0 & 0 & 40.00% & 100.00% & 0 \\
+        \bottomrule
+    \end{tabular}
+
+    \vspace{0.5em}
+    \begin{tabular}{lrrrrrrrrrrr}
+        \toprule
+        System & Failed & Apply & C/T & Res. & Sem. & Sec. & Broad & FP & LLM & Infra & Unclear \\
+        \midrule
+        CARE & 456 & 291 & 0 & 160 & 0 & 1 & 0 & 0 & 4 & 0 & 0 \\
+        LLM-only & 482 & 408 & 0 & 60 & 0 & 0 & 2 & 0 & 6 & 6 & 0 \\
+        \bottomrule
+    \end{tabular}
+\end{table*}

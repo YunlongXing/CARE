@@ -1,0 +1,22 @@
+--- a/examples/streamingHC_ringBuffer.c
++++ b/examples/streamingHC_ringBuffer.c
+@@ -204,11 +204,11 @@
+     // decompress
+-    {   FILE* const inpFp = fopen(lz4Filename, "rb");
+-        FILE* const outFp = fopen(decFilename, "wb");
+-
+-        test_decompress(outFp, inpFp);
+-
+-        fclose(outFp);
+-        fclose(inpFp);
+-    }
++    {   FILE* const inpFp = fopen(lz4Filename, "rb");
++        FILE* const outFp = fopen(decFilename, "wb");
++
++        test_decompress(outFp, inpFp);
++
++        if (outFp) fclose(outFp);
++        if (inpFp) fclose(inpFp);
++    }
+ 
+     // verify

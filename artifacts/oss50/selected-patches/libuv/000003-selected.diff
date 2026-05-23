@@ -1,0 +1,18 @@
+--- a/test/test-fs.c
++++ b/test/test-fs.c
+@@ -4161,9 +4161,10 @@
+   }
+-  ASSERT_OK(close(pipe_fds[0]));
+-
+-  free(iovs);
+-  free(buffer);
+-  free(ctx.data);
++  ASSERT_OK(close(pipe_fds[0]));
++  pipe_fds[0] = -1;
++
++  free(iovs);
++  free(buffer);
++  free(ctx.data);
+ 
+   MAKE_VALGRIND_HAPPY(loop);
+ }

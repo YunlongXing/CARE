@@ -1,0 +1,14 @@
+--- a/apps/lib/vms_term_sock.c
++++ b/apps/lib/vms_term_sock.c
+@@ -266,7 +266,9 @@
+         ** Close the terminal socket pair
+         */
+-        close(TerminalSocketPair[0]);
+-        close(TerminalSocketPair[1]);
++        if (TerminalSocketPair[0])
++            close(TerminalSocketPair[0]);
++        if (TerminalSocketPair[1])
++            close(TerminalSocketPair[1]);
+ 
+         /*
+         ** Return the initialized socket

@@ -1,0 +1,11 @@
+--- a/test/regress_buffer.c
++++ b/test/regress_buffer.c
+@@ -1595,7 +1595,7 @@
+ 	free(cp);
+ 	cp = evbuffer_readln(evb, &sz, EVBUFFER_EOL_NUL);
+ 	tt_line_eq("to accomplish time fill");
+-	free(cp);
++	if (cp) free(cp);
+ 	cp = evbuffer_readln(evb, &sz, EVBUFFER_EOL_NUL);
+ 	tt_ptr_op(cp, ==, NULL);
+ 	evbuffer_drain(evb, -1);

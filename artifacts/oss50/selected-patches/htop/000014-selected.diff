@@ -1,0 +1,15 @@
+--- a/pcp/PCPDynamicColumn.c
++++ b/pcp/PCPDynamicColumn.c
+@@ -149,6 +149,9 @@
+       char** config = String_splitFirst(trimmed, '=', &n);
+-      free(trimmed);
+-      if (config == NULL)
+-         continue;
++      free(trimmed);
++      if (config == NULL) {
++         /* ensure trimmed is always freed before continue */
++         /* nothing else to clean up here */
++         continue;
++      }
+ 
+       char* key = String_trim(config[0]);

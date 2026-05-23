@@ -1,0 +1,49 @@
+--- a/test/test-kq-collision.c
++++ b/test/test-kq-collision.c
+@@ -29,43 +29,44 @@
+ 	evthread_use_pthreads();
+ 
+ 	cfg = event_config_new();
+ 	methods = event_get_supported_methods();
+ 	for (size_t i = 0; methods[i] != NULL; ++i) {
+ 		if (strcmp(methods[i], "kqueue"))
+ 			event_config_avoid_method(cfg, methods[i]);
+ 	}
+ 	base = event_base_new_with_config(cfg);
+ 	event_config_free(cfg);
+ 
+ 	/* Triggering a EVFILT_USER event is expected to not tamper EVFILT_READ on the same indent. */
+ 	ev_notify = evtimer_new(base, notify_cb, base);
+ 	tv_notify.tv_sec = 0;
+ 	tv_notify.tv_usec = 0;
+ 	evtimer_add(ev_notify, &tv_notify);
+ 	ev_write = evtimer_new(base, write_cb, &pipefd[1]);
+ 	tv_write.tv_sec = 1;
+ 	tv_write.tv_usec = 0;
+ 	evtimer_add(ev_write, &tv_write);
+ 	ev_exit = evtimer_new(base, exit_cb, base);
+ 	tv_exit.tv_sec = 5; // exit after 5 seconds, after the timeout.
+ 	tv_exit.tv_usec = 0;
+ 	evtimer_add(ev_exit, &tv_exit);
+ 
+ 	/* Start dispatching events */
+ 	ev_read = event_new(base, MAGIC_FD, EV_READ | EV_TIMEOUT, read_cb, event_self_cbarg());
+ 	event_add(ev_read, &timeout);
+ 	event_base_dispatch(base);
+ 
+ 	// The read_cb is expected to be called once.
+ 	assert(read_called == 1);
+ 
+ 	/* Clean up the resources */
+ 	event_free(ev_read);
+ 	event_free(ev_notify);
+ 	event_free(ev_write);
+ 	event_free(ev_exit);
+-	close(pipefd[0]);
+-	close(pipefd[1]);
++	if (pipefd[0] != MAGIC_FD)
++		close(pipefd[0]);
++	close(pipefd[1]);
+ 	event_base_free(base);
+ 	return EXIT_SUCCESS;
+ }

@@ -1,0 +1,11 @@
+--- a/client.c
++++ b/client.c
+@@ -168,6 +168,7 @@
+ 	}
+ 
+-	fclose(fp);
++	if (fp)
++		fclose(fp);
+ out:
+ 	return ret;
+ }

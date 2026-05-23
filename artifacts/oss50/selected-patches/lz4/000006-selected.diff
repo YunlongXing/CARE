@@ -1,0 +1,19 @@
+--- a/examples/blockStreaming_ringBuffer.c
++++ b/examples/blockStreaming_ringBuffer.c
+@@ -163,12 +163,12 @@
+     // decompress
+     {   FILE* const inpFp = fopen(lz4Filename, "rb");
+         FILE* const outFp = fopen(decFilename, "wb");
+ 
+-        test_decompress(outFp, inpFp);
+-
+-        fclose(outFp);
+-        fclose(inpFp);
++        test_decompress(outFp, inpFp);
++
++        if (outFp) fclose(outFp);
++        if (inpFp) fclose(inpFp);
+     }
+ 
+     // verify
+     {   FILE* const inpFp = fopen(inpFilename, "rb");

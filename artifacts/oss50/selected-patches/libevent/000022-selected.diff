@@ -1,0 +1,9 @@
+--- a/test/regress_buffer.c
++++ b/test/regress_buffer.c
+@@ -1626,5 +1626,5 @@
+ 	tt_line_eq("");
+-	free(cp);
++	if (cp) free(cp);
+ 	evbuffer_validate(evb);
+ 
+ 	cp = evbuffer_readln(evb, &sz, EVBUFFER_EOL_CRLF_STRICT);

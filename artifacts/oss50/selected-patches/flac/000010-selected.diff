@@ -1,0 +1,44 @@
+--- a/src/test_seeking/main.c
++++ b/src/test_seeking/main.c
+@@ -62,32 +62,36 @@
+ 	if (rawfilename && !read_pcm_(pcm, rawfilename, flacfilename)) {
+-		free(pcm[0]);
+-		free(pcm[1]);
+-		return 1;
++		free(pcm[0]);
++		free(pcm[1]);
++		pcm[0] = 0;
++		pcm[1] = 0;
++		return 1;
+ 	}
+ 
+ 	(void) signal(SIGINT, our_sigint_handler_);
+ 
+ 	for (read_mode = 0; ok && read_mode <= 3; read_mode++) {
+ 		/* no need to do "decode all" read_mode if PCM checking is available */
+ 		if (rawfilename && read_mode == 2)
+ 			continue;
+ 		if (strlen(flacfilename) > 4 && (0 == strcmp(flacfilename+strlen(flacfilename)-4, ".oga") || 0 == strcmp(flacfilename+strlen(flacfilename)-4, ".ogg"))) {
+ #if FLAC__HAS_OGG
+ 			if(read_mode == 3)
+ 				continue;
+ 			ok = seek_barrage(/*is_ogg=*/true, flacfilename, flacfilesize, count, samples, read_mode, rawfilename? pcm : 0);
+ #else
+ 			fprintf(stderr, "ERROR: Ogg FLAC not supported\n");
+ 			ok = false;
+ #endif
+ 		}
+ 		else {
+ 			ok = seek_barrage(/*is_ogg=*/false, flacfilename, flacfilesize, count, samples, read_mode, rawfilename? pcm : 0);
+ 		}
+ 	}
+ 
+-	free(pcm[0]);
+-	free(pcm[1]);
++	if (pcm[0])
++		free(pcm[0]);
++	if (pcm[1])
++		free(pcm[1]);
+ 
+ 	return ok? 0 : 2;
+ }

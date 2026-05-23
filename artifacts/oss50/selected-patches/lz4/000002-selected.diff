@@ -1,0 +1,22 @@
+--- a/examples/blockStreaming_doubleBuffer.c
++++ b/examples/blockStreaming_doubleBuffer.c
+@@ -180,14 +180,14 @@
+     // decompress
+     {
+         FILE* inpFp = fopen(lz4Filename, "rb");
+         FILE* outFp = fopen(decFilename, "wb");
+ 
+         printf("decompress : %s -> %s\n", lz4Filename, decFilename);
+-        test_decompress(outFp, inpFp);
+-        printf("decompress : done\n");
+-
+-        fclose(outFp);
+-        fclose(inpFp);
++        test_decompress(outFp, inpFp);
++        printf("decompress : done\n");
++
++        if (outFp) fclose(outFp);
++        if (inpFp) fclose(inpFp);
+     }
+ 
+     // verify

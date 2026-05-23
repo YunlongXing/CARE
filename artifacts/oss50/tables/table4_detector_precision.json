@@ -1,0 +1,12 @@
+{
+  "false_positive": 89,
+  "false_positive_rate": 0.89,
+  "lenient_precision": 0.09,
+  "likely_true_positive": 8,
+  "resource_lifecycle_relevant": 14,
+  "reviewed": 100,
+  "security_relevant": 49,
+  "strict_precision": 0.01,
+  "true_positive": 1,
+  "unclear": 2
+}

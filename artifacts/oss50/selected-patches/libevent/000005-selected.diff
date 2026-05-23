@@ -1,0 +1,8 @@
+--- a/test/regress_buffer.c
++++ b/test/regress_buffer.c
+@@ -1486,4 +1486,4 @@
+ 	cp = evbuffer_readln(evb, &sz, EVBUFFER_EOL_CRLF);
+ 	tt_line_eq("Line with good crlf");
+-	free(cp);
++	if (cp) free(cp);
+ 	evbuffer_validate(evb);

@@ -1,0 +1,11 @@
+# Table 5: Cost and Scalability
+
+| Phase | Projects | Files | Functions | Opportunities | Generated/reviewed | Passed/positive | LLM calls | Aggregate sec | Mean sec | Median sec | P95 sec | Notes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| OSS50 dry scan | 50 | 25162 | 266602 | 142104 | 142104 |  | 0 | 8359.842 | 167.197 | 29.776 | 1360.238 | 49 ok projects, 1 failed projects |
+| CARE critical patch/validation | 33 |  |  | 487 | 487 | 31 | 487 | 45924.124 | 94.3 | 30.283 | 225.139 | aggregate candidate runtime; wall-clock depends on parallelism and API rate limits |
+| LLM-only critical patch/validation | 33 |  |  | 487 | 487 | 5 | 487 | 45395.592 | 93.215 | 34.197 | 289.35 | aggregate candidate runtime; wall-clock depends on parallelism and API rate limits |
+| LLM-assisted patch review | 33 |  |  |  | 974 | 36 | 115 |  |  |  |  | 36 passed-patch reviews plus 938 failed-patch classifications |
+| LLM-assisted detector precision review | 24 |  |  |  | 100 | 9 | 10 |  |  |  |  | sampled detector precision; exact token/cost telemetry was not recorded |
+
+Note: exact prompt/response token telemetry and API billing were not recorded in this prototype run; LLM call counts are reported as the reproducible cost proxy.

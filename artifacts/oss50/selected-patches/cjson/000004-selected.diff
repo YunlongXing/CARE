@@ -1,0 +1,8 @@
+--- a/tests/old_utils_tests.c
++++ b/tests/old_utils_tests.c
+@@ -132,4 +132,5 @@
+     cJSON_Delete(object);
+     cJSON_Delete(object1);
+     cJSON_Delete(object3);
++    cJSON_Delete(object4);
+ }

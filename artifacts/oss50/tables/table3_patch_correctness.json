@@ -1,0 +1,24 @@
+[
+  {
+    "correct": 7,
+    "incorrect": 0,
+    "lenient_correctness": 1.0,
+    "likely_correct": 24,
+    "reviewed_patches": 31,
+    "strict_correctness": 0.225806,
+    "system": "CARE",
+    "uncertain": 0,
+    "unsafe_regressions": 0
+  },
+  {
+    "correct": 2,
+    "incorrect": 0,
+    "lenient_correctness": 1.0,
+    "likely_correct": 3,
+    "reviewed_patches": 5,
+    "strict_correctness": 0.4,
+    "system": "LLM-only",
+    "uncertain": 0,
+    "unsafe_regressions": 0
+  }
+]

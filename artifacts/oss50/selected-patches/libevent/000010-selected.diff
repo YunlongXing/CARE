@@ -1,0 +1,10 @@
+--- a/test/regress_buffer.c
++++ b/test/regress_buffer.c
+@@ -1528,6 +1528,6 @@
+ 	tt_line_eq("More");
+-	free(cp);
++	free(cp); cp = NULL;
+ 	tt_assert(evbuffer_get_length(evb) == 0);
+ 	evbuffer_validate(evb);
+ 
+ 	s = "An internal CR\r is not an eol\r\nNor is a lack of one";

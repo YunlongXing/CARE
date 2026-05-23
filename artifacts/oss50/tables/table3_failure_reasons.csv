@@ -1,0 +1,3 @@
+system,failed_patches,apply_failure,compile_or_test_failure,resource_lifecycle_still_unsafe,semantic_change,security_regression,overbroad_or_unrelated_patch,detector_false_positive,llm_api_or_empty_patch,validator_infrastructure_failure,unclear
+CARE,456,291,0,160,0,1,0,0,4,0,0
+LLM-only,482,408,0,60,0,0,2,0,6,6,0

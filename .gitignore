@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+.venv/
+venv/
+*.dSYM/
+*.plist
+
+# OS/editor noise
+.DS_Store
+*.swp
+*.swo
+
+# Local logs and transient reports
+*.log
+run.pid
+run.log.path
+/care-report.json
+/care-report.md
+/patches/
+
+# Example build outputs
+examples/goto_refactor/test_goto
+examples/duplicate_check/test_duplicate_check
+
+# Downloaded third-party code and heavyweight benchmark outputs.
+# Public, curated artifacts live under artifacts/.
+benchmarks/openssl/
+benchmarks/openssl_full_scan/
+benchmarks/openssl_top5_llm_realval/
+benchmarks/openssl_x509_sample/
+benchmarks/openssl_x509_unsafe_sample/
+benchmarks/oss50/
+
+# Keep the lightweight benchmark profile manifest.
+!benchmarks/
+!benchmarks/build_profiles.json

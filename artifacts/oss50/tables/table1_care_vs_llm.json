@@ -1,0 +1,42 @@
+[
+  {
+    "applicable_patches": 193,
+    "candidate_validations": 487,
+    "generated_patches": 487,
+    "missing_candidate_validations": 0,
+    "opportunities": 487,
+    "patch_apply_rate": 0.396304,
+    "processed": 487,
+    "result_dir": "benchmarks/oss50/llm-validation-critical-only",
+    "selected_patches": 31,
+    "status_counts": {
+      "ok": 487
+    },
+    "system": "CARE",
+    "unsafe_regression_count": 4,
+    "unsafe_regression_rate": 0.020725,
+    "validation_pass_rate": 0.063655,
+    "validation_pass_rate_per_opportunity": 0.063655,
+    "validation_passed": 31
+  },
+  {
+    "applicable_patches": 63,
+    "candidate_validations": 487,
+    "generated_patches": 487,
+    "missing_candidate_validations": 0,
+    "opportunities": 487,
+    "patch_apply_rate": 0.129363,
+    "processed": 487,
+    "result_dir": "benchmarks/oss50/llm-validation-critical-llm-only-shards/shard-00,benchmarks/oss50/llm-validation-critical-llm-only-shards/shard-01,benchmarks/oss50/llm-validation-critical-llm-only-shards/shard-02,benchmarks/oss50/llm-validation-critical-llm-only-shards/shard-03,benchmarks/oss50/llm-validation-critical-llm-only-shards/shard-04,benchmarks/oss50/llm-validation-critical-llm-only-shards/shard-05,benchmarks/oss50/llm-validation-critical-llm-only-shards/shard-06,benchmarks/oss50/llm-validation-critical-llm-only-shards/shard-07",
+    "selected_patches": 5,
+    "status_counts": {
+      "ok": 487
+    },
+    "system": "LLM-only",
+    "unsafe_regression_count": 1,
+    "unsafe_regression_rate": 0.015873,
+    "validation_pass_rate": 0.010267,
+    "validation_pass_rate_per_opportunity": 0.010267,
+    "validation_passed": 5
+  }
+]

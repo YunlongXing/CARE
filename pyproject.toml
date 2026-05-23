@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "care"
+version = "0.1.0"
+description = "CARE: Context-aware Automated Refactoring Engine"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+  { name = "CARE Contributors" }
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+]
+
+[project.scripts]
+care = "care.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["care*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

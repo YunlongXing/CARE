@@ -1,0 +1,15 @@
+--- a/iolog.c
++++ b/iolog.c
+@@ -217,10 +217,10 @@
+ 		ret = ipo_special(td, ipo);
+ 		if (ret < 0) {
+-			free(ipo);
+-			break;
++			free(ipo);
++			return 1;
+ 		} else if (ret > 0) {
+ 			free(ipo);
+ 			continue;
+ 		}
+ 
+ 		io_u->ddir = ipo->ddir;

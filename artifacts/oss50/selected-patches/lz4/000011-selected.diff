@@ -1,0 +1,14 @@
+--- a/ossfuzz/round_trip_fuzzer.c
++++ b/ossfuzz/round_trip_fuzzer.c
+@@ -59,10 +59,10 @@
+         int const partialSize = LZ4_decompress_safe_partial_usingDict(
+                 dst, partial, dstSize, partialCapacity, partialCapacity, NULL, 0);
+         FUZZ_ASSERT(partialSize >= 0);
+         FUZZ_ASSERT_MSG(partialSize == partialCapacity, "Incorrect size");
+         FUZZ_ASSERT_MSG(!memcmp(data, partial, partialSize), "Corruption!");
+-        free(partial);
++        if (partial) free(partial);
+     }
+     /* Partial decompression using dict with small prefix as dict */
+     {
+         char* const partial = (char*)malloc(partialCapacity);

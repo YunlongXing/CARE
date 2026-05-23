@@ -1,0 +1,13 @@
+--- a/libarchive/archive_read_support_format_rar.c
++++ b/libarchive/archive_read_support_format_rar.c
+@@ -2586,9 +2586,10 @@
+   free(rar->maincode.table);
+   free(rar->offsetcode.table);
+   free(rar->lowoffsetcode.table);
+   free(rar->lengthcode.table);
++  rar->maincode.table = NULL;
+   memset(&rar->maincode, 0, sizeof(rar->maincode));
+   memset(&rar->offsetcode, 0, sizeof(rar->offsetcode));
+   memset(&rar->lowoffsetcode, 0, sizeof(rar->lowoffsetcode));
+   memset(&rar->lengthcode, 0, sizeof(rar->lengthcode));
+ }

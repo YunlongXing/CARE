@@ -1,0 +1,16 @@
+--- a/arguments.c
++++ b/arguments.c
+@@ -833,9 +833,10 @@
+ 	switch (pr->status) {
+ 	case CMD_PARSE_ERROR:
+-		*error = pr->error;
+-		return (NULL);
++		*error = pr->error;
++		free(pr);
++		return (NULL);
+ 	case CMD_PARSE_SUCCESS:
+-		return (pr->cmdlist);
++		return (pr->cmdlist);
+ 	}
+ 	fatalx("invalid parse return state");
+ }

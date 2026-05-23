@@ -1,0 +1,10 @@
+--- a/libavformat/async.c
++++ b/libavformat/async.c
+@@ -244,4 +244,6 @@
+     }
+ 
+-    return NULL;
++    /* Ensure mutex is unlocked if still held */
++    /* (No-op if already unlocked on all paths above, but defensive) */
++    return NULL;
+ }

@@ -1,0 +1,2 @@
+reviewed,true_positive,likely_true_positive,false_positive,unclear,strict_precision,lenient_precision,false_positive_rate,security_relevant,resource_lifecycle_relevant
+100,1,8,89,2,0.01,0.09,0.89,49,14

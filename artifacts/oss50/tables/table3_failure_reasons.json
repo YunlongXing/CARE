@@ -1,0 +1,30 @@
+[
+  {
+    "apply_failure": 291,
+    "compile_or_test_failure": 0,
+    "detector_false_positive": 0,
+    "failed_patches": 456,
+    "llm_api_or_empty_patch": 4,
+    "overbroad_or_unrelated_patch": 0,
+    "resource_lifecycle_still_unsafe": 160,
+    "security_regression": 1,
+    "semantic_change": 0,
+    "system": "CARE",
+    "unclear": 0,
+    "validator_infrastructure_failure": 0
+  },
+  {
+    "apply_failure": 408,
+    "compile_or_test_failure": 0,
+    "detector_false_positive": 0,
+    "failed_patches": 482,
+    "llm_api_or_empty_patch": 6,
+    "overbroad_or_unrelated_patch": 2,
+    "resource_lifecycle_still_unsafe": 60,
+    "security_regression": 0,
+    "semantic_change": 0,
+    "system": "LLM-only",
+    "unclear": 0,
+    "validator_infrastructure_failure": 6
+  }
+]

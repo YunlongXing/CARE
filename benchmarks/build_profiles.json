@@ -1,0 +1,48 @@
+{
+  "projects": {
+    "cjson": {
+      "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
+      "test_cmd": "ctest --test-dir build-care --output-on-failure"
+    },
+    "fio": {
+      "build_cmd": "./configure && make -j2",
+      "test_cmd": null
+    },
+    "flac": {
+      "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
+      "test_cmd": "ctest --test-dir build-care --output-on-failure"
+    },
+    "htop": {
+      "build_cmd": "./autogen.sh && ./configure && make -j2",
+      "test_cmd": null
+    },
+    "libarchive": {
+      "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
+      "test_cmd": "ctest --test-dir build-care --output-on-failure"
+    },
+    "libevent": {
+      "build_cmd": "cmake -S . -B build-care -DEVENT__DISABLE_OPENSSL=ON && cmake --build build-care -j2",
+      "test_cmd": "ctest --test-dir build-care --output-on-failure"
+    },
+    "libuv": {
+      "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
+      "test_cmd": "ctest --test-dir build-care --output-on-failure"
+    },
+    "lz4": {
+      "build_cmd": "make -j2",
+      "test_cmd": "make test"
+    },
+    "openssl": {
+      "build_cmd": "./Configure no-shared no-tests linux-x86_64 && make -j2",
+      "test_cmd": null
+    },
+    "sqlite": {
+      "build_cmd": "./configure && make -j2 sqlite3",
+      "test_cmd": null
+    },
+    "zlib-ng": {
+      "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
+      "test_cmd": "ctest --test-dir build-care --output-on-failure"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+--- a/examples/blockStreaming_lineByLine.c
++++ b/examples/blockStreaming_lineByLine.c
+@@ -191,14 +191,14 @@
+     // decompress
+     {
+         FILE* inpFp = fopen(lz4Filename, "rb");
+         FILE* outFp = fopen(decFilename, "wb");
+ 
+-        test_decompress(outFp, inpFp, MESSAGE_MAX_BYTES, RING_BUFFER_BYTES);
+-
+-        fclose(outFp);
+-        fclose(inpFp);
++        test_decompress(outFp, inpFp, MESSAGE_MAX_BYTES, RING_BUFFER_BYTES);
++
++        if (outFp != NULL) fclose(outFp);
++        if (inpFp != NULL) fclose(inpFp);
+     }
+ 
+     // verify
+     {
+         FILE* inpFp = fopen(inpFilename, "rb");

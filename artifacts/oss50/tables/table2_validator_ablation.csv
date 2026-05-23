@@ -1,0 +1,11 @@
+system,variant,resource_checker,semantic_checker,security_checker,generated_patches,passed,pass_rate,extra_accepted_vs_full,extra_accept_rate,llm_reviewed_extra,llm_false_accepted,llm_false_accept_rate
+CARE,Full validator,on,on,on,487,31,0.063655,0,0.0,0,0,0.0
+CARE,No resource checker,off,on,on,487,189,0.38809,158,0.835979,158,121,0.765823
+CARE,No semantic checker,on,off,on,487,31,0.063655,0,0.0,0,0,0.0
+CARE,No security checker,on,on,off,487,32,0.065708,1,0.03125,1,1,1.0
+CARE,No resource/semantic/security checkers,off,off,off,487,193,0.396304,162,0.839378,162,125,0.771605
+LLM-only,Full validator,on,on,on,487,5,0.010267,0,0.0,0,0,0.0
+LLM-only,No resource checker,off,on,on,487,62,0.12731,57,0.919355,57,50,0.877193
+LLM-only,No semantic checker,on,off,on,487,5,0.010267,0,0.0,0,0,0.0
+LLM-only,No security checker,on,on,off,487,5,0.010267,0,0.0,0,0,0.0
+LLM-only,No resource/semantic/security checkers,off,off,off,487,63,0.129363,58,0.920635,58,51,0.87931

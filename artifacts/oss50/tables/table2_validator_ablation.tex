@@ -1,0 +1,21 @@
+\begin{table*}[t]
+    \centering
+    \caption{Validator ablation on critical OSS50 candidates.}
+    \label{tab:validator-ablation}
+    \begin{tabular}{lllllrrrr}
+        \toprule
+        System & Variant & Res. & Sem. & Sec. & Pass & Pass rate & Extra & False rate \\
+        \midrule
+        CARE & Full validator & on & on & on & 31 & 6.37% & 0 & 0.00% \\
+        CARE & No resource checker & off & on & on & 189 & 38.81% & 158 & 76.58% \\
+        CARE & No semantic checker & on & off & on & 31 & 6.37% & 0 & 0.00% \\
+        CARE & No security checker & on & on & off & 32 & 6.57% & 1 & 100.00% \\
+        CARE & No resource/semantic/security checkers & off & off & off & 193 & 39.63% & 162 & 77.16% \\
+        LLM-only & Full validator & on & on & on & 5 & 1.03% & 0 & 0.00% \\
+        LLM-only & No resource checker & off & on & on & 62 & 12.73% & 57 & 87.72% \\
+        LLM-only & No semantic checker & on & off & on & 5 & 1.03% & 0 & 0.00% \\
+        LLM-only & No security checker & on & on & off & 5 & 1.03% & 0 & 0.00% \\
+        LLM-only & No resource/semantic/security checkers & off & off & off & 63 & 12.94% & 58 & 87.93% \\
+        \bottomrule
+    \end{tabular}
+\end{table*}

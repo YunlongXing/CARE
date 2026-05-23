@@ -1,0 +1,9 @@
+--- a/test/regress_buffer.c
++++ b/test/regress_buffer.c
+@@ -1558,5 +1558,5 @@
+ 	tt_line_eq("An\rand a nl");
+-	free(cp);
++	if (cp) free(cp);
+ 	evbuffer_validate(evb);
+ 
+ 	cp = evbuffer_readln(evb, &sz, EVBUFFER_EOL_LF);

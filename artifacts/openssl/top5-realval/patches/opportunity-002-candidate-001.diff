@@ -1,0 +1,11 @@
+--- a/apps/lib/vms_term_sock.c
++++ b/apps/lib/vms_term_sock.c
+@@ -228,6 +228,7 @@
+         if (!(status & 1)) {
+             LogMessage("TerminalSocket: SYS$QIO () - %08X", status);
+             close(TerminalSocketPair[0]);
+-            close(TerminalSocketPair[1]);
++            if (TerminalSocketPair[1])
++                close(TerminalSocketPair[1]);
+             return TERM_SOCK_FAILURE;
+         }

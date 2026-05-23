@@ -1,0 +1,139 @@
+{
+  "failed_stage_counts": {
+    "candidate_0": 456
+  },
+  "pending": 0,
+  "processed": 487,
+  "processed_kind_counts": {
+    "resource_imbalance": 487
+  },
+  "processed_severity_counts": {
+    "critical": 487
+  },
+  "projects": {
+    "capnproto": {
+      "processed": 2
+    },
+    "cjson": {
+      "passed": 2,
+      "processed": 4
+    },
+    "ffmpeg": {
+      "passed": 1,
+      "processed": 2
+    },
+    "fio": {
+      "passed": 2,
+      "processed": 16
+    },
+    "flac": {
+      "passed": 1,
+      "processed": 10
+    },
+    "glfw": {
+      "processed": 11
+    },
+    "haproxy": {
+      "passed": 1,
+      "processed": 25
+    },
+    "htop": {
+      "passed": 2,
+      "processed": 30
+    },
+    "jansson": {
+      "processed": 2
+    },
+    "jemalloc": {
+      "passed": 1,
+      "processed": 17
+    },
+    "libarchive": {
+      "passed": 1,
+      "processed": 89
+    },
+    "libevent": {
+      "passed": 9,
+      "processed": 36
+    },
+    "libgit2": {
+      "processed": 2
+    },
+    "libjpeg-turbo": {
+      "processed": 11
+    },
+    "libusb": {
+      "processed": 3
+    },
+    "libuv": {
+      "passed": 1,
+      "processed": 5
+    },
+    "libyaml": {
+      "processed": 2
+    },
+    "lz4": {
+      "passed": 8,
+      "processed": 22
+    },
+    "make": {
+      "processed": 6
+    },
+    "memcached": {
+      "processed": 19
+    },
+    "nginx": {
+      "processed": 3
+    },
+    "openssl": {
+      "processed": 10
+    },
+    "protobuf": {
+      "passed": 1,
+      "processed": 8
+    },
+    "redis": {
+      "processed": 37
+    },
+    "sdl": {
+      "processed": 7
+    },
+    "sqlite": {
+      "processed": 13
+    },
+    "tesseract": {
+      "processed": 2
+    },
+    "tmux": {
+      "passed": 1,
+      "processed": 38
+    },
+    "uthash": {
+      "processed": 1
+    },
+    "vim": {
+      "processed": 10
+    },
+    "wolfssl": {
+      "processed": 4
+    },
+    "zlib-ng": {
+      "processed": 1
+    },
+    "zstd": {
+      "processed": 39
+    }
+  },
+  "queue_kind_counts": {
+    "resource_imbalance": 487
+  },
+  "queue_severity_counts": {
+    "critical": 487
+  },
+  "queue_size": 487,
+  "selected_patches": 31,
+  "status_counts": {
+    "ok": 487
+  },
+  "validation_passed": 31
+}

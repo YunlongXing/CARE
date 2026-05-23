@@ -1,0 +1,16 @@
+\begin{table*}[t]
+    \centering
+    \caption{Cost and scalability summary.}
+    \label{tab:cost-scalability}
+    \begin{tabular}{lrrrrrrr}
+        \toprule
+        Phase & Projects & Opp. & Gen./Rev. & Pass/Pos. & LLM calls & Agg. sec & Med. sec \\
+        \midrule
+        OSS50 dry scan & 50 & 142104 & 142104 &  & 0 & 8359.842 & 29.776 \\
+        CARE critical patch/validation & 33 & 487 & 487 & 31 & 487 & 45924.124 & 30.283 \\
+        LLM-only critical patch/validation & 33 & 487 & 487 & 5 & 487 & 45395.592 & 34.197 \\
+        LLM-assisted patch review & 33 &  & 974 & 36 & 115 &  &  \\
+        LLM-assisted detector precision review & 24 &  & 100 & 9 & 10 &  &  \\
+        \bottomrule
+    \end{tabular}
+\end{table*}

@@ -1,0 +1,12 @@
+--- a/tests/old_utils_tests.c
++++ b/tests/old_utils_tests.c
+@@ -133,8 +133,9 @@
+     pointer = cJSONUtils_FindPointerFromObjectTo(object3, object4);
+     TEST_ASSERT_EQUAL_STRING("/m~1n",pointer);
+     free(pointer);
+ 
+     cJSON_Delete(object);
+     cJSON_Delete(object1);
+     cJSON_Delete(object3);
++    cJSON_Delete(object4);
+ }

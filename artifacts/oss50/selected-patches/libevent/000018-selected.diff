@@ -1,0 +1,11 @@
+--- a/test/regress_buffer.c
++++ b/test/regress_buffer.c
+@@ -1589,7 +1589,7 @@
+ 	free(cp);
+ 	cp = evbuffer_readln(evb, &sz, EVBUFFER_EOL_NUL);
+ 	tt_line_eq("");
+-	free(cp);
++	if (cp) free(cp);
+ 	cp = evbuffer_readln(evb, &sz, EVBUFFER_EOL_NUL);
+ 	tt_line_eq("The all-zeros character which may serve");
+ 	free(cp);

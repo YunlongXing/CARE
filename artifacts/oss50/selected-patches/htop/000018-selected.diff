@@ -1,0 +1,15 @@
+--- a/pcp/PCPDynamicColumn.c
++++ b/pcp/PCPDynamicColumn.c
+@@ -495,9 +495,9 @@
+    switch (type) {
+       case PM_TYPE_STRING: {
+          int cmp = SPACESHIP_NULLSTR(atom2.cp, atom1.cp);
+-         free(atom2.cp);
+-         free(atom1.cp);
+-         return cmp;
++         free(atom1.cp);
++         free(atom2.cp);
++         return cmp;
+       }
+       case PM_TYPE_32:
+          return SPACESHIP_NUMBER(atom2.l, atom1.l);
