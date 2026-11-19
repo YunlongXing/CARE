@@ -58,7 +58,7 @@ benchmarks/patch_safety/agent_review_*/
 # Large frozen experiment data are packaged locally for handoff. Metadata and
 # reproduction notes under artifacts/frozen/ remain versioned.
 artifacts/frozen/*/data/
-artifacts/frozen/*/*.tar.gz
+artifacts/frozen/*/*.tar.gz*
 
 # Keep the lightweight benchmark profile manifest.
 !benchmarks/
