@@ -63,10 +63,7 @@ class ResourceConsistencyChecker:
                 )
             if before_functions is not None:
                 before_issues, _ = _collect_resource_findings(self.knowledge_base, before_functions)
-                before_issue_set = set(before_issues)
-                counterexamples = [
-                    issue for issue in counterexamples if issue not in before_issue_set
-                ]
+                counterexamples = _new_resource_issues(counterexamples, before_issues)
                 logs.append(
                     f"resource regression check: {len(before_issues)} pre-existing issue(s), "
                     f"{len(counterexamples)} new issue(s)"
@@ -200,6 +197,34 @@ def _resource_issues(function: object, events: list[ResourceEvent]) -> list[str]
                 lines = ", ".join(str(event.location.line) for event in releases)
                 issues.append(f"{function.name}: obvious double {release_kind} of {variable} at lines {lines}")
     return issues
+
+
+def _new_resource_issues(after_issues: list[str], before_issues: list[str]) -> list[str]:
+    """Keep findings whose identity was not already present before the patch.
+
+    Source edits routinely shift line numbers. Comparing rendered diagnostics
+    verbatim would turn a pre-existing finding into a regression solely because
+    its location changed.
+    """
+
+    remaining: dict[str, int] = defaultdict(int)
+    for issue in before_issues:
+        remaining[_issue_identity(issue)] += 1
+
+    new_issues: list[str] = []
+    for issue in after_issues:
+        identity = _issue_identity(issue)
+        if remaining[identity]:
+            remaining[identity] -= 1
+        else:
+            new_issues.append(issue)
+    return new_issues
+
+
+def _issue_identity(issue: str) -> str:
+    issue = re.sub(r"\bat lines?\s+[0-9, ]+", "", issue)
+    issue = re.sub(r"\bline\s+\d+", "line", issue)
+    return re.sub(r"\s+", " ", issue).strip()
 
 
 def _early_return_issues(

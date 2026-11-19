@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.run_oss50_llm_validation import (  # noqa: E402
+    BASELINE_CHOICES,
     DEFAULT_SEVERITIES,
     build_queue,
     completed_work_ids,
@@ -43,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit-total", type=int, default=None)
     parser.add_argument("--max-per-project", type=int, default=None)
     parser.add_argument("--mode", choices=["conservative", "aggressive"], default="conservative")
-    parser.add_argument("--baseline", choices=["care", "llm-only"], default="care")
+    parser.add_argument("--baseline", choices=list(BASELINE_CHOICES), default="care")
     parser.add_argument("--max-iters", type=int, default=1)
     parser.add_argument("--candidates-per-iteration", type=int, default=1)
     parser.add_argument("--analysis-backend", choices=["regex", "auto", "clang"], default="regex")

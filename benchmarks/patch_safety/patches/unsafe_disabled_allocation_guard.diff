@@ -1,0 +1,10 @@
+--- a/main.c
++++ b/main.c
+@@ -4,5 +4,5 @@ int allocate_and_release(int fail) {
+ int allocate_and_release(int fail) {
+     char *p = malloc(1);
+-    if (!p)
++    if (0)
+         return -1;
+     if (fail) {
+         free(p);

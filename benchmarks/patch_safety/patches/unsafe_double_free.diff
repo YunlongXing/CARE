@@ -1,0 +1,10 @@
+--- a/main.c
++++ b/main.c
+@@ -5,6 +5,8 @@
+     if (!p)
+         return -1;
+     free(p);
++    if (fail)
++        free(p);
+     return fail ? 1 : 0;
+ }

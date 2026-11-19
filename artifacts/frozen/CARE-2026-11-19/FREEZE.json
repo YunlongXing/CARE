@@ -1,0 +1,22 @@
+{
+  "freeze_name": "CARE-2026-11-19",
+  "status": "pending_system_commit",
+  "python_requirement": ">=3.9",
+  "primary_dataset": {
+    "safe_developer_patches": 33,
+    "unsafe_variants": 69,
+    "projects": ["cjson", "libpng", "lz4", "zlib"],
+    "result_directory": "data/results_v6"
+  },
+  "calibration_dataset": {
+    "safe_patches": 2,
+    "unsafe_variants": 9,
+    "result_directory": "data/calibration_results_v2"
+  },
+  "security_extension": {
+    "safe_developer_patches": 3,
+    "unsafe_variants": 5,
+    "result_directory": "data/results_security_v1"
+  },
+  "integrity_manifest": "data.sha256"
+}

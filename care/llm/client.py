@@ -8,8 +8,8 @@ import re
 import time
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Any, Optional
 
 
 class LLMClient:
@@ -59,7 +59,7 @@ class MockLLMClient(LLMClient):
 
 @dataclass
 class OpenAICompatibleClient(LLMClient):
-    """Minimal OpenAI-compatible chat completions client."""
+    """Small OpenAI-compatible client for Chat Completions and Responses."""
 
     api_key: str
     model: str
@@ -67,6 +67,10 @@ class OpenAICompatibleClient(LLMClient):
     timeout_seconds: int = 120
     max_retries: int = 8
     retry_base_seconds: float = 8.0
+    api_style: str = "chat_completions"
+    reasoning_effort: Optional[str] = None
+    max_output_tokens: Optional[int] = None
+    last_usage: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
 
     @classmethod
     def from_env(cls) -> "OpenAICompatibleClient":
@@ -75,26 +79,32 @@ class OpenAICompatibleClient(LLMClient):
             raise ValueError(
                 "CARE_LLM_API_KEY or OPENAI_API_KEY is required when CARE_LLM_PROVIDER=openai"
             )
+        api_style = os.environ.get("CARE_LLM_API_STYLE", "chat_completions").strip().lower()
+        if api_style not in {"chat_completions", "responses"}:
+            raise ValueError("CARE_LLM_API_STYLE must be chat_completions or responses")
+        default_base_url = (
+            "https://api.openai.com/v1/responses"
+            if api_style == "responses"
+            else "https://api.openai.com/v1/chat/completions"
+        )
+        raw_max_output = os.environ.get("CARE_LLM_MAX_OUTPUT_TOKENS", "").strip()
         return cls(
             api_key=api_key,
             model=os.environ.get("CARE_LLM_MODEL", "gpt-4.1"),
             base_url=os.environ.get(
                 "CARE_LLM_BASE_URL",
-                "https://api.openai.com/v1/chat/completions",
+                default_base_url,
             ),
             timeout_seconds=int(os.environ.get("CARE_LLM_TIMEOUT", "120")),
             max_retries=int(os.environ.get("CARE_LLM_MAX_RETRIES", "8")),
             retry_base_seconds=float(os.environ.get("CARE_LLM_RETRY_BASE_SECONDS", "8")),
+            api_style=api_style,
+            reasoning_effort=os.environ.get("CARE_LLM_REASONING_EFFORT") or None,
+            max_output_tokens=int(raw_max_output) if raw_max_output else None,
         )
 
     def complete(self, prompt: str, temperature: float = 0.2) -> str:
-        body = json.dumps(
-            {
-                "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": temperature,
-            }
-        ).encode("utf-8")
+        body = json.dumps(self._request_body(prompt, temperature)).encode("utf-8")
         request = urllib.request.Request(
             self.base_url,
             data=body,
@@ -105,11 +115,46 @@ class OpenAICompatibleClient(LLMClient):
             method="POST",
         )
         payload = self._open_with_retries(request)
+        self.last_usage = dict(payload.get("usage") or {}) if isinstance(payload, dict) else {}
+
+        if self.api_style == "responses":
+            return self._response_output_text(payload)
 
         try:
             return payload["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
             raise RuntimeError(f"unexpected LLM response shape: {payload}") from exc
+
+    def _request_body(self, prompt: str, temperature: float) -> dict[str, Any]:
+        if self.api_style == "responses":
+            body: dict[str, Any] = {"model": self.model, "input": prompt}
+            if self.reasoning_effort:
+                body["reasoning"] = {"effort": self.reasoning_effort}
+            if self.max_output_tokens:
+                body["max_output_tokens"] = self.max_output_tokens
+            return body
+        body = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temperature,
+        }
+        if self.max_output_tokens:
+            body["max_output_tokens"] = self.max_output_tokens
+        return body
+
+    @staticmethod
+    def _response_output_text(payload: dict[str, Any]) -> str:
+        text = payload.get("output_text")
+        if isinstance(text, str) and text:
+            return text
+        fragments: list[str] = []
+        for item in payload.get("output") or []:
+            for content in item.get("content") or []:
+                if content.get("type") == "output_text" and isinstance(content.get("text"), str):
+                    fragments.append(content["text"])
+        if fragments:
+            return "\n".join(fragments)
+        raise RuntimeError(f"unexpected Responses API response shape: {payload}")
 
     def _open_with_retries(self, request: urllib.request.Request) -> dict:
         last_error: Exception | None = None

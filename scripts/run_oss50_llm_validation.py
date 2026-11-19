@@ -46,6 +46,13 @@ from care.validation.validator import RefactoringValidator
 
 
 DEFAULT_SEVERITIES = ("critical", "high")
+BASELINE_CHOICES = (
+    "care",
+    "context-only",
+    "llm-only",
+    "llm-agent",
+)
+DIRECT_LLM_BASELINES = {"llm-only", "llm-agent"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -66,11 +73,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mode", choices=["conservative", "aggressive"], default="conservative")
     parser.add_argument(
         "--baseline",
-        choices=["care", "llm-only"],
+        choices=list(BASELINE_CHOICES),
         default="care",
         help=(
-            "Patch generation mode. 'care' uses CARE planning/context; "
-            "'llm-only' gives the LLM only the opportunity and target function."
+            "Patch generation mode. 'care' uses CARE planning/context plus any configured repair loop; "
+            "'context-only' uses CARE graph/planner context but disables feedback repair; "
+            "'llm-only' gives the model only the opportunity and target function in a one-shot prompt; "
+            "'llm-agent' is a SOTA-inspired direct-LLM baseline with validation-feedback repair but no CARE graph."
         ),
     )
     parser.add_argument("--max-iters", type=int, default=1)
@@ -140,6 +149,8 @@ def main(argv: list[str] | None = None) -> int:
     for completed_path in args.completed_results or []:
         completed.update(completed_work_ids((root / completed_path).resolve()))
     llm_client = LLMClient.from_env(require_real=args.require_real_llm)
+    experiment_metadata = experiment_config(args, llm_client)
+    write_json(output_dir / "experiment_config.json", experiment_metadata)
     if args.require_real_llm and not args.skip_llm_probe:
         probe_llm_client(llm_client)
 
@@ -172,6 +183,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {item['work_id']} {item['severity']} {item['kind']} {item['function']}:{item['line']}", flush=True)
             try:
                 result = run_one(item, project_state, output_dir)
+                result["experiment"] = experiment_metadata
             except Exception as exc:
                 result = error_record(item, "run_opportunity", exc)
             result["duration_seconds"] = round(time.monotonic() - started, 3)
@@ -262,7 +274,10 @@ def build_queue(
             if not seen_start:
                 seen_start = work_id == start_after
                 continue
-            queue.append(queue_record(record, opportunity, index, work_id))
+            item = queue_record(record, opportunity, index, work_id)
+            if not queue_record_paths_available(item):
+                continue
+            queue.append(item)
             project_count += 1
             if limit_total is not None and len(queue) >= limit_total:
                 return queue
@@ -289,22 +304,104 @@ def queue_record(
     index: int,
     work_id: str,
 ) -> dict[str, Any]:
-    location = opportunity.get("location") or {}
+    project_id = project["id"]
+    normalized_opportunity = normalize_opportunity_paths(opportunity, project_id)
+    location = normalized_opportunity.get("location") or {}
     return {
         "work_id": work_id,
-        "project_id": project["id"],
-        "project_name": project.get("name", project["id"]),
-        "project_path": project["project_path"],
+        "project_id": project_id,
+        "project_name": project.get("name", project_id),
+        "project_path": normalize_project_path(project.get("project_path"), project_id),
         "report_index": index,
-        "opportunity": opportunity,
-        "opportunity_id": opportunity.get("id"),
-        "severity": opportunity.get("severity"),
-        "kind": opportunity.get("kind"),
-        "function": opportunity.get("function"),
-        "file": opportunity.get("file") or location.get("file"),
+        "opportunity": normalized_opportunity,
+        "opportunity_id": normalized_opportunity.get("id"),
+        "severity": normalized_opportunity.get("severity"),
+        "kind": normalized_opportunity.get("kind"),
+        "function": normalized_opportunity.get("function"),
+        "file": normalized_opportunity.get("file") or location.get("file"),
         "line": location.get("line"),
-        "description": opportunity.get("description"),
+        "description": normalized_opportunity.get("description"),
     }
+
+
+def queue_record_paths_available(item: dict[str, Any]) -> bool:
+    """Reject stale report entries that cannot be validated in this checkout."""
+
+    project_path = item.get("project_path")
+    source_path = item.get("file")
+    return bool(
+        project_path
+        and source_path
+        and Path(str(project_path)).is_dir()
+        and Path(str(source_path)).is_file()
+    )
+
+
+def normalize_project_path(value: str | os.PathLike[str] | None, project_id: str) -> str:
+    """Map persisted remote benchmark paths back to this checkout when needed."""
+
+    if value:
+        path = Path(value)
+        mapped = map_oss50_path(path, expect_project_root=True)
+        if mapped is not None:
+            return str(mapped)
+        if path.exists():
+            return str(path)
+    fallback = benchmark_project_root(project_id)
+    return str(fallback if fallback.exists() else Path(value or fallback))
+
+
+def normalize_source_path(value: str | os.PathLike[str] | None) -> str | None:
+    if not value:
+        return None
+    path = Path(value)
+    mapped = map_oss50_path(path, expect_project_root=False)
+    if mapped is not None:
+        return str(mapped)
+    return str(path if not path.exists() else path)
+
+
+def map_oss50_path(path: Path, expect_project_root: bool) -> Path | None:
+    """Relocate OSS50 and reused benchmark paths saved by another checkout."""
+
+    parts = path.parts
+    for index in range(len(parts) - 2):
+        if parts[index : index + 3] == ("benchmarks", "oss50", "sources"):
+            rel = Path(*parts[index:])
+            return ROOT / rel
+    for index in range(len(parts) - 1):
+        if parts[index : index + 2] == ("benchmarks", "openssl"):
+            rel = Path(*parts[index:])
+            return ROOT / rel
+    return None
+
+
+def benchmark_project_root(project_id: str) -> Path:
+    if project_id.lower() == "openssl":
+        return ROOT / "benchmarks" / "openssl"
+    return ROOT / "benchmarks" / "oss50" / "sources" / project_id
+
+
+def normalize_opportunity_paths(opportunity: dict[str, Any], project_id: str) -> dict[str, Any]:
+    normalized = dict(opportunity)
+    file_value = normalize_source_path(normalized.get("file"))
+    if file_value:
+        normalized["file"] = file_value
+    location = normalized.get("location")
+    if isinstance(location, dict):
+        location = dict(location)
+        location_file = normalize_source_path(location.get("file")) or file_value
+        if location_file:
+            location["file"] = location_file
+        normalized["location"] = location
+    evidence = normalized.get("evidence")
+    if isinstance(evidence, dict):
+        evidence = dict(evidence)
+        for key in ("file", "source_file"):
+            if evidence.get(key):
+                evidence[key] = normalize_source_path(evidence.get(key))
+        normalized["evidence"] = evidence
+    return normalized
 
 
 def load_project_state(
@@ -341,7 +438,7 @@ def load_project_state(
     else:
         parser = ASTParser(prefer_clang=config.analysis_backend != "regex")
         functions = parser.parse_project(project)
-    if args.baseline == "llm-only":
+    if args.baseline in DIRECT_LLM_BASELINES:
         context = project.to_context()
         context.functions = functions
         patch_generator = PatchGenerator(client=llm_client, default_mode=config.mode)
@@ -398,8 +495,10 @@ def run_one(
     project_state: dict[str, Any],
     output_dir: Path,
 ) -> dict[str, Any]:
-    if project_state.get("baseline") == "llm-only":
-        return run_one_llm_only(item, project_state, output_dir)
+    if project_state.get("baseline") in DIRECT_LLM_BASELINES:
+        return run_one_direct_llm_baseline(item, project_state, output_dir)
+    if project_state.get("baseline") == "context-only":
+        return run_one_context_only(item, project_state, output_dir)
 
     opportunity = opportunity_from_dict(item["opportunity"])
     planner: RefactoringPlanner = project_state["planner"]
@@ -422,12 +521,96 @@ def run_one(
     }
 
 
-def run_one_llm_only(
+def run_one_context_only(
     item: dict[str, Any],
     project_state: dict[str, Any],
     output_dir: Path,
 ) -> dict[str, Any]:
-    """Run the direct LLM baseline without CARE context or planner output."""
+    """Run CARE context/planning without validation-feedback repair.
+
+    This baseline isolates the value of graph-derived prompts and structured
+    safety contracts from the repair loop. It still uses the same validator for
+    acceptance, but it does not ask the LLM to revise a failed patch.
+    """
+
+    opportunity = opportunity_from_dict(item["opportunity"])
+    project = project_state["project"]
+    planner: RefactoringPlanner = project_state["planner"]
+    context = project_state["context"]
+    patch_generator: PatchGenerator = project_state["patch_generator"]
+    validator: RefactoringValidator = project_state["validator"]
+    function = find_function(context.functions, opportunity)
+    plan = planner.plan(context, opportunity)
+    source_snippet = source_snippet_for(function, opportunity.location.line) if function else ""
+    full_function_body = function.body if function else ""
+    context_summary = opportunity.context_summary or json.dumps(
+        {
+            "summary_kind": "care_context_only",
+            "function": opportunity.function,
+            "resource_events": [
+                event.to_dict()
+                for event in context.resource_events
+                if Path(event.location.file) == Path(opportunity.file)
+            ][:20],
+            "dataflow": (context.dataflow_facts or {}).get(opportunity.function, {}),
+        },
+        sort_keys=True,
+    )
+    candidates = patch_generator.generate_candidates(
+        source_snippet=source_snippet,
+        full_function_body=full_function_body,
+        plan=plan,
+        context_summary=context_summary,
+        validation_feedback=None,
+        mode=project_state["config"].mode,
+        n=project_state["config"].candidates_per_iteration,
+        project=project,
+    )
+    failed_results: list[ValidationResult] = []
+    for candidate in candidates:
+        validation = validator.validate(project, candidate)
+        if validation.passed:
+            patch_records = write_patch_files(output_dir, item, candidates, candidate.id)
+            return {
+                **item_metadata(item),
+                "status": "ok",
+                "baseline": "context-only",
+                "plan": plan.to_dict(),
+                "candidate_patches": patch_records,
+                "selected_patch": candidate.to_dict(),
+                "validation_passed": True,
+                "validation": validation.to_dict(),
+                "validation_summary": summarize_validation(validation),
+            }
+        failed_results.append(validation)
+
+    final_validation = merge_candidate_failures(failed_results)
+    patch_records = write_patch_files(output_dir, item, candidates, None)
+    return {
+        **item_metadata(item),
+        "status": "ok",
+        "baseline": "context-only",
+        "plan": plan.to_dict(),
+        "candidate_patches": patch_records,
+        "selected_patch": None,
+        "validation_passed": False,
+        "validation": final_validation.to_dict(),
+        "validation_summary": summarize_validation(final_validation),
+    }
+
+
+def run_one_direct_llm_baseline(
+    item: dict[str, Any],
+    project_state: dict[str, Any],
+    output_dir: Path,
+) -> dict[str, Any]:
+    """Run direct LLM baselines without CARE context or planner output.
+
+    ``llm-only`` is a one-shot direct baseline. ``llm-agent`` is a lightweight
+    SOTA-inspired baseline that sees validation feedback and may iterate, but it
+    still does not receive CARE graph summaries, safety contracts, or
+    patch-materialization support beyond the shared validator.
+    """
 
     opportunity = opportunity_from_dict(item["opportunity"])
     config: CareConfig = project_state["config"]
@@ -443,19 +626,21 @@ def run_one_llm_only(
     failed_results: list[ValidationResult] = []
     feedback: ValidationResult | None = None
 
-    for iteration in range(config.max_iterations):
+    baseline = str(project_state.get("baseline") or "llm-only")
+    max_iterations = config.max_iterations if baseline == "llm-agent" else 1
+    for iteration in range(max_iterations):
         generated = patch_generator.generate_candidates(
             source_snippet=source_snippet,
             full_function_body=full_function_body,
             plan=plan,
             context_summary=context_summary,
-            validation_feedback=llm_only_feedback(feedback) if feedback else None,
+            validation_feedback=llm_only_feedback(feedback, agentic=baseline == "llm-agent") if feedback else None,
             mode=config.mode,
             n=config.candidates_per_iteration,
             project=project,
         )
         for index, candidate in enumerate(generated):
-            candidate.id = f"llm-only:{opportunity.id}:{iteration}:{index}:{candidate.id.split(':')[-1]}"
+            candidate.id = f"{baseline}:{opportunity.id}:{iteration}:{index}:{candidate.id.split(':')[-1]}"
         candidates.extend(generated)
 
         for candidate in generated:
@@ -465,7 +650,7 @@ def run_one_llm_only(
                 return {
                     **item_metadata(item),
                     "status": "ok",
-                    "baseline": "llm-only",
+                    "baseline": baseline,
                     "plan": plan.to_dict(),
                     "candidate_patches": patch_records,
                     "selected_patch": candidate.to_dict(),
@@ -482,7 +667,7 @@ def run_one_llm_only(
     return {
         **item_metadata(item),
         "status": "ok",
-        "baseline": "llm-only",
+        "baseline": baseline,
         "plan": plan.to_dict(),
         "candidate_patches": patch_records,
         "selected_patch": None,
@@ -535,19 +720,49 @@ def llm_only_context_summary(opportunity: RefactoringOpportunity) -> str:
     )
 
 
-def llm_only_feedback(validation_result: ValidationResult) -> str:
+def llm_only_feedback(validation_result: ValidationResult, agentic: bool = False) -> str:
     logs = "\n".join(validation_result.logs[:20]) if validation_result.logs else "(no logs)"
     counterexamples = (
         "\n".join(validation_result.counterexamples[:20])
         if validation_result.counterexamples
         else "(no counterexamples)"
     )
+    prefix = (
+        "The previous direct LLM patch failed validation. You are allowed to revise the patch using "
+        "the validator feedback, but you still do not have CARE's graph-derived safety contract.\n\n"
+        if agentic
+        else "The previous direct LLM patch failed validation.\n\n"
+    )
     return (
-        "The previous direct LLM patch failed validation.\n\n"
+        prefix
+        +
         f"Failure logs:\n{logs}\n\n"
         f"Counterexamples:\n{counterexamples}\n\n"
         "Generate a smaller safer unified diff. Preserve behavior and avoid unrelated edits."
     )
+
+
+def experiment_config(args: argparse.Namespace, llm_client: LLMClient) -> dict[str, Any]:
+    provider = "mock" if getattr(llm_client, "is_mock", False) else os.environ.get("CARE_LLM_PROVIDER") or "openai"
+    model = getattr(llm_client, "model", None) or os.environ.get("CARE_LLM_MODEL") or "unknown"
+    return {
+        "baseline": args.baseline,
+        "severities": list(args.severities),
+        "min_evidence_confidence": args.min_evidence_confidence,
+        "mode": args.mode,
+        "max_iterations": args.max_iters,
+        "effective_max_iterations": 1 if args.baseline == "llm-only" else args.max_iters,
+        "candidates_per_iteration": args.candidates_per_iteration,
+        "analysis_backend": args.analysis_backend,
+        "cfg_backend": args.cfg_backend,
+        "context_cache": bool(args.context_cache),
+        "provider": provider,
+        "model": model,
+        "temperature": 0.2,
+        "build_profiles": args.build_profiles,
+        "build_cmd_override": bool(args.build_cmd),
+        "test_cmd_override": bool(args.test_cmd),
+    }
 
 
 def find_function(

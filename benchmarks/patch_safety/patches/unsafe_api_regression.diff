@@ -1,0 +1,10 @@
+--- a/main.c
++++ b/main.c
+@@ -4,6 +4,6 @@ int copy_name(char *dst, unsigned long size, const char *src) {
+ int copy_name(char *dst, unsigned long size, const char *src) {
+     if (!dst || !src || size == 0)
+         return -1;
+-    snprintf(dst, size, "%s", src);
++    sprintf(dst, "%s", src);
+     return 0;
+ }

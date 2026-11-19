@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Optional
 
 from care.config import CareConfig
-from care.core.models import PatchCandidate, StageResult, ValidationResult
+from care.core.models import FunctionInfo, PatchCandidate, StageResult, ValidationResult
 from care.core.project import ProjectLoader
 from care.validation.common import parse_project_functions, stage_from_exception
 from care.validation.compiler import CompileChecker
@@ -24,6 +24,7 @@ class RefactoringValidator:
         self,
         config: Optional[CareConfig] = None,
         project: Optional[object] = None,
+        disabled_stages: set[str] | None = None,
     ) -> None:
         self.config = config.normalized() if config is not None else None
         self.project = project
@@ -33,6 +34,7 @@ class RefactoringValidator:
         self.resource_checker = ResourceConsistencyChecker()
         self.semantic_checker = SemanticEquivalenceChecker()
         self.security_checker = SecurityRegressionChecker()
+        self.disabled_stages = frozenset(disabled_stages or ())
         self._backup_created = False
 
     def validate(
@@ -138,36 +140,39 @@ class RefactoringValidator:
         try:
             stages.append(self.compile_checker.run(project))
             stages.append(self.test_runner.run(project))
-            stages.append(self.static_analysis.run(project))
+            try:
+                static_result = self.static_analysis.run(
+                    project,
+                    changed_files=_changed_source_files(patch_candidate.diff),
+                )
+            except TypeError as exc:
+                if "changed_files" not in str(exc):
+                    raise
+                static_result = self.static_analysis.run(project)
+            stages.append(static_result)
             try:
                 after_functions = parse_project_functions(project, prefer_clang=prefer_clang)
             except Exception:
                 after_functions = []
-            stages.append(
-                self.resource_checker.run(
-                    project,
-                    patch_candidate,
-                    functions=after_functions,
-                    before_functions=before_functions,
-                    prefer_clang=prefer_clang,
-                )
-            )
-            stages.append(
-                self.semantic_checker.run(
-                    project,
-                    patch_candidate,
-                    before_functions=before_functions,
-                    after_functions=after_functions,
-                )
-            )
-            stages.append(
-                self.security_checker.run(
-                    project,
-                    patch_candidate,
-                    before_functions=before_functions,
-                    after_functions=after_functions,
-                )
-            )
+            stages.append(self._resource_stage(
+                project,
+                patch_candidate,
+                after_functions,
+                before_functions,
+                prefer_clang,
+            ))
+            stages.append(self._semantic_stage(
+                project,
+                patch_candidate,
+                before_functions,
+                after_functions,
+            ))
+            stages.append(self._security_stage(
+                project,
+                patch_candidate,
+                before_functions,
+                after_functions,
+            ))
         finally:
             if patch_applied:
                 try:
@@ -178,6 +183,56 @@ class RefactoringValidator:
 
     def _prefer_clang_analysis(self) -> bool:
         return self.config is None or self.config.analysis_backend != "regex"
+
+    def _resource_stage(
+        self,
+        project: object,
+        patch_candidate: PatchCandidate,
+        after_functions: list[FunctionInfo],
+        before_functions: list[FunctionInfo],
+        prefer_clang: bool,
+    ) -> StageResult:
+        if "resource_consistency" in self.disabled_stages:
+            return _disabled_stage("resource_consistency")
+        return self.resource_checker.run(
+            project,
+            patch_candidate,
+            functions=after_functions,
+            before_functions=before_functions,
+            prefer_clang=prefer_clang,
+        )
+
+    def _semantic_stage(
+        self,
+        project: object,
+        patch_candidate: PatchCandidate,
+        before_functions: list[FunctionInfo],
+        after_functions: list[FunctionInfo],
+    ) -> StageResult:
+        if "semantic_equivalence" in self.disabled_stages:
+            return _disabled_stage("semantic_equivalence")
+        return self.semantic_checker.run(
+            project,
+            patch_candidate,
+            before_functions=before_functions,
+            after_functions=after_functions,
+        )
+
+    def _security_stage(
+        self,
+        project: object,
+        patch_candidate: PatchCandidate,
+        before_functions: list[FunctionInfo],
+        after_functions: list[FunctionInfo],
+    ) -> StageResult:
+        if "security_regression" in self.disabled_stages:
+            return _disabled_stage("security_regression")
+        return self.security_checker.run(
+            project,
+            patch_candidate,
+            before_functions=before_functions,
+            after_functions=after_functions,
+        )
 
     @classmethod
     def from_config(cls, config: CareConfig) -> "RefactoringValidator":
@@ -206,6 +261,26 @@ def _validation_from_stages(stages: list[StageResult]) -> ValidationResult:
         logs=logs,
         counterexamples=counterexamples,
     )
+
+
+def _disabled_stage(name: str) -> StageResult:
+    return StageResult(name=name, passed=True, warnings=[f"{name} disabled for ablation"])
+
+
+def _changed_source_files(diff: str) -> list[str]:
+    extensions = (".c", ".cc", ".cpp", ".h", ".hpp")
+    files: list[str] = []
+    for line in diff.splitlines():
+        if not line.startswith("+++ "):
+            continue
+        path = line[4:].strip()
+        if path == "/dev/null":
+            continue
+        if path.startswith("b/"):
+            path = path[2:]
+        if path.endswith(extensions) and path not in files:
+            files.append(path)
+    return files
 
 
 Validator = RefactoringValidator

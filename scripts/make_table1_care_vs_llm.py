@@ -1,9 +1,11 @@
-"""Build Table 1: CARE vs direct LLM-only patching.
+"""Build Table 1: CARE vs LLM-based baselines.
 
-The script consumes two result directories produced by
-``scripts/run_oss50_llm_validation.py``. The CARE directory is the normal
-CARE pipeline. The LLM-only directory should be produced with
-``--baseline llm-only`` so that both rows share the same queue and validator.
+The script consumes one or more result directories produced by
+``scripts/run_oss50_llm_validation.py`` or the parallel/dynamic wrappers. By
+default it reproduces the original CARE-vs-LLM-only table, but ``--systems`` can
+be used to build a full baseline matrix, for example:
+
+``CARE=benchmarks/oss50/full-care,Context-only=benchmarks/oss50/full-context,LLM-agent=benchmarks/oss50/full-agent``.
 """
 
 from __future__ import annotations
@@ -21,25 +23,38 @@ from typing import Any
 DEFAULT_CARE_DIR = "benchmarks/oss50/llm-validation-critical-only"
 DEFAULT_LLM_ONLY_DIR = "benchmarks/oss50/llm-validation-critical-llm-only"
 DEFAULT_OUTPUT_DIR = "benchmarks/oss50/paper-tables"
+DEFAULT_SYSTEMS = ""
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--care-dir", default=DEFAULT_CARE_DIR)
     parser.add_argument("--llm-only-dir", default=DEFAULT_LLM_ONLY_DIR)
+    parser.add_argument(
+        "--systems",
+        default=DEFAULT_SYSTEMS,
+        help=(
+            "Optional comma-separated NAME=DIR[,DIR] entries. When set, this "
+            "overrides --care-dir/--llm-only-dir and supports any number of baselines."
+        ),
+    )
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR)
     args = parser.parse_args(argv)
 
     root = Path.cwd().resolve()
-    care_dirs = parse_result_dirs(root, args.care_dir)
-    llm_only_dirs = parse_result_dirs(root, args.llm_only_dir)
     output_dir = (root / args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    rows = [
-        summarize_system("CARE", care_dirs),
-        summarize_system("LLM-only", llm_only_dirs),
-    ]
+    if args.systems:
+        rows = [
+            summarize_system(name, dirs)
+            for name, dirs in parse_systems(root, args.systems).items()
+        ]
+    else:
+        rows = [
+            summarize_system("CARE", parse_result_dirs(root, args.care_dir)),
+            summarize_system("LLM-only", parse_result_dirs(root, args.llm_only_dir)),
+        ]
     write_csv(output_dir / "table1_care_vs_llm.csv", rows)
     write_markdown(output_dir / "table1_care_vs_llm.md", rows)
     write_latex(output_dir / "table1_care_vs_llm.tex", rows)
@@ -65,6 +80,25 @@ def parse_result_dirs(root: Path, raw: str) -> list[Path]:
     return dirs
 
 
+def parse_systems(root: Path, raw: str) -> dict[str, list[Path]]:
+    systems: dict[str, list[Path]] = {}
+    current_name: str | None = None
+    current_parts: list[str] = []
+    for token in [part.strip() for part in raw.split(",") if part.strip()]:
+        if "=" in token:
+            if current_name is not None:
+                systems[current_name] = parse_result_dirs(root, ",".join(current_parts))
+            current_name, first = token.split("=", 1)
+            current_parts = [first]
+        elif current_name is not None:
+            current_parts.append(token)
+        else:
+            raise ValueError(f"system entry is missing NAME= prefix: {token}")
+    if current_name is not None:
+        systems[current_name] = parse_result_dirs(root, ",".join(current_parts))
+    return systems
+
+
 def summarize_system(name: str, result_dirs: list[Path]) -> dict[str, Any]:
     summaries = [read_json(result_dir / "summary.json") for result_dir in result_dirs]
     queues = [read_json(result_dir / "queue.json") for result_dir in result_dirs]
@@ -82,6 +116,11 @@ def summarize_system(name: str, result_dirs: list[Path]) -> dict[str, Any]:
     opportunities = len(queue_items) or sum(int(summary.get("queue_size") or 0) for summary in summaries)
     processed = len(results)
     generated = sum(len(result.get("candidate_patches") or []) for result in results)
+    effective_llm_calls = sum(
+        max(1, len(result.get("candidate_patches") or []))
+        for result in results
+        if result.get("status") == "ok"
+    )
     applicable = 0
     security_regressions = 0
     candidate_validations = 0
@@ -110,6 +149,7 @@ def summarize_system(name: str, result_dirs: list[Path]) -> dict[str, Any]:
         "opportunities": opportunities,
         "processed": processed,
         "generated_patches": generated,
+        "effective_llm_calls": effective_llm_calls,
         "applicable_patches": applicable,
         "patch_apply_rate": rate(applicable, generated),
         "validation_passed": validation_passed,
@@ -191,6 +231,7 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     fieldnames = [
         "system",
         "opportunities",
+        "effective_llm_calls",
         "generated_patches",
         "applicable_patches",
         "patch_apply_rate",
@@ -213,17 +254,18 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 
 def write_markdown(path: Path, rows: list[dict[str, Any]]) -> None:
     lines = [
-        "# Table 1: CARE vs LLM-only",
+        "# Table 1: CARE vs LLM Baselines",
         "",
-        "| System | Opportunities | Generated patches | Applicable patches | Patch apply rate | Validation passed | Validation pass rate | Unsafe regression count |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| System | Opportunities | LLM calls | Generated patches | Applicable patches | Patch apply rate | Validation passed | Validation pass rate | Unsafe rejected |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
         lines.append(
-            "| {system} | {opportunities} | {generated_patches} | {applicable_patches} | "
+            "| {system} | {opportunities} | {llm_calls} | {generated_patches} | {applicable_patches} | "
             "{apply_rate} | {validation_passed} | {pass_rate} | {unsafe} |".format(
                 system=row["system"],
                 opportunities=row["opportunities"],
+                llm_calls=row["effective_llm_calls"],
                 generated_patches=row["generated_patches"],
                 applicable_patches=row["applicable_patches"],
                 apply_rate=format_percent(row["patch_apply_rate"]),
@@ -239,7 +281,7 @@ def write_markdown(path: Path, rows: list[dict[str, Any]]) -> None:
             "",
             "- Patch apply rate = applicable patches / generated patches.",
             "- Validation pass rate = fully validated patches / generated patches.",
-            "- Unsafe regression count = applicable candidates rejected by the security regression checker.",
+            "- Unsafe rejected = applicable candidates rejected by the security regression checker.",
         ]
     )
     path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
@@ -249,10 +291,11 @@ def write_latex(path: Path, rows: list[dict[str, Any]]) -> None:
     body = []
     for row in rows:
         body.append(
-            "        {system} & {opportunities} & {generated} & {applicable} & "
+            "        {system} & {opportunities} & {llm_calls} & {generated} & {applicable} & "
             "{apply_rate} & {passed} & {pass_rate} & {unsafe} \\\\".format(
                 system=latex_escape(row["system"]),
                 opportunities=row["opportunities"],
+                llm_calls=row["effective_llm_calls"],
                 generated=row["generated_patches"],
                 applicable=row["applicable_patches"],
                 apply_rate=format_percent(row["patch_apply_rate"]),
@@ -265,11 +308,11 @@ def write_latex(path: Path, rows: list[dict[str, Any]]) -> None:
         [
             "\\begin{table}[t]",
             "    \\centering",
-            "    \\caption{CARE vs. direct LLM-only patching on critical OSS50 opportunities.}",
+            "    \\caption{CARE vs. LLM-based baselines on the same OSS50 opportunity queue.}",
             "    \\label{tab:care-vs-llm}",
-            "    \\begin{tabular}{lrrrrrrr}",
+            "    \\begin{tabular}{lrrrrrrrr}",
             "        \\toprule",
-            "        System & Opp. & Gen. & Apply & Apply rate & Valid & Valid rate & Unsafe \\\\",
+            "        System & Opp. & Calls & Gen. & Apply & Apply rate & Valid & Valid rate & Unsafe rej. \\\\",
             "        \\midrule",
             *body,
             "        \\bottomrule",

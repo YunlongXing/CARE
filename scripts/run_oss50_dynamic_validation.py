@@ -28,6 +28,7 @@ if str(ROOT) not in sys.path:
 
 from care.llm.client import LLMClient  # noqa: E402
 from scripts.run_oss50_llm_validation import (  # noqa: E402
+    BASELINE_CHOICES,
     DEFAULT_SEVERITIES,
     append_jsonl,
     assert_real_llm_available,
@@ -68,7 +69,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit-total", type=int, default=None)
     parser.add_argument("--max-per-project", type=int, default=None)
     parser.add_argument("--mode", choices=["conservative", "aggressive"], default="conservative")
-    parser.add_argument("--baseline", choices=["care", "llm-only"], default="care")
+    parser.add_argument("--baseline", choices=list(BASELINE_CHOICES), default="care")
     parser.add_argument("--max-iters", type=int, default=1)
     parser.add_argument("--candidates-per-iteration", type=int, default=1)
     parser.add_argument("--analysis-backend", choices=["regex", "auto", "clang"], default="regex")
@@ -142,7 +143,7 @@ def coordinator_main(args: argparse.Namespace) -> int:
         },
     )
     if args.queue_only:
-        merge_worker_outputs(output_dir, queue)
+        write_summary(output_dir, queue=queue, results=read_jsonl(output_dir / "results.jsonl"))
         print(f"queued {len(queue)} opportunities; pending dynamic work: {len(pending)}")
         return 0
 

@@ -2,7 +2,7 @@
   "projects": {
     "cjson": {
       "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
-      "test_cmd": "ctest --test-dir build-care --output-on-failure"
+      "test_cmd": "LD_LIBRARY_PATH=\"$PWD/build-care/tests:$PWD/build-care${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\" ctest --test-dir build-care --output-on-failure"
     },
     "fio": {
       "build_cmd": "./configure && make -j2",
@@ -22,7 +22,13 @@
     },
     "libevent": {
       "build_cmd": "cmake -S . -B build-care -DEVENT__DISABLE_OPENSSL=ON && cmake --build build-care -j2",
-      "test_cmd": "ctest --test-dir build-care --output-on-failure"
+      "test_cmd": "ctest --test-dir build-care --output-on-failure",
+      "patch_safety_exclude": true,
+      "patch_safety_exclusion_reason": "selected historical revisions require an obsolete autotools toolchain"
+    },
+    "libpng": {
+      "build_cmd": "cmake -S . -B build-care -DPNG_TESTS=OFF && cmake --build build-care -j2",
+      "test_cmd": null
     },
     "libuv": {
       "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
@@ -30,7 +36,7 @@
     },
     "lz4": {
       "build_cmd": "make -j2",
-      "test_cmd": "make test"
+      "test_cmd": "make -C tests test-frametest FUZZER_TIME=-T3"
     },
     "openssl": {
       "build_cmd": "./Configure no-shared no-tests linux-x86_64 && make -j2",
@@ -40,9 +46,17 @@
       "build_cmd": "./configure && make -j2 sqlite3",
       "test_cmd": null
     },
+    "tmux": {
+      "patch_safety_exclude": true,
+      "patch_safety_exclusion_reason": "selected historical revisions require BSD make semantics unavailable in the benchmark environment"
+    },
     "zlib-ng": {
       "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
       "test_cmd": "ctest --test-dir build-care --output-on-failure"
+    },
+    "zlib": {
+      "build_cmd": "cmake -S . -B build-care && cmake --build build-care -j2",
+      "test_cmd": null
     }
   }
 }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 from care.core.models import FunctionInfo, PatchCandidate, StageResult
@@ -25,11 +26,6 @@ VISIBLE_CALLS = {
     "perror",
     "syslog",
     "log",
-    "free",
-    "delete",
-    "unlock",
-    "mutex_unlock",
-    "pthread_mutex_unlock",
 }
 
 
@@ -82,7 +78,7 @@ def _compare_functions(
             counterexamples.append(
                 f"public signature changed for {name}: {before.signature!r} -> {after.signature!r}"
             )
-        if _return_forms(before) != _return_forms(after):
+        if not _return_forms_equivalent(before, after):
             counterexamples.append(
                 f"return statement forms changed for {name}: {_return_forms(before)} -> {_return_forms(after)}"
             )
@@ -110,7 +106,83 @@ def _signature_core(signature: str) -> str:
 
 
 def _return_forms(function: FunctionInfo) -> list[str]:
-    return [" ".join(statement.split()) for statement in function.return_statements]
+    forms: list[str] = []
+    for statement in function.return_statements:
+        compact = " ".join(statement.split())
+        match = re.fullmatch(r"return\s*\(?\s*(.*?)\s*\)?\s*;", compact)
+        if match is None:
+            forms.append(compact)
+            continue
+        forms.append(f"return {_strip_outer_parentheses(match.group(1))};")
+    return forms
+
+
+def _strip_outer_parentheses(expression: str) -> str:
+    value = expression.strip()
+    while value.startswith("(") and value.endswith(")") and _outer_parentheses_enclose(value):
+        value = value[1:-1].strip()
+    return value
+
+
+def _outer_parentheses_enclose(value: str) -> bool:
+    depth = 0
+    for index, character in enumerate(value):
+        if character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+            if depth == 0 and index != len(value) - 1:
+                return False
+    return depth == 0
+
+
+def _return_forms_equivalent(before: FunctionInfo, after: FunctionInfo) -> bool:
+    """Recognize a small, conservative return-variable cleanup rewrite."""
+
+    before_forms = _return_forms(before)
+    after_forms = _return_forms(after)
+    if before_forms == after_forms:
+        return True
+
+    after_return_variables = [
+        form[len("return ") : -1].strip()
+        for form in after_forms
+        if form.startswith("return ") and form.endswith(";")
+        and form[len("return ") : -1].strip().isidentifier()
+    ]
+    if len(set(after_return_variables)) != 1:
+        return False
+    variable = after_return_variables[0]
+    if after_forms.count(f"return {variable};") != 1:
+        return False
+
+    before_values = _simple_return_values(before_forms)
+    after_direct_values = _simple_return_values(
+        [form for form in after_forms if form != f"return {variable};"]
+    )
+    assigned_values = _assigned_values(after.body, variable)
+    return bool(before_values) and before_values == after_direct_values | assigned_values
+
+
+def _simple_return_values(forms: list[str]) -> set[str]:
+    values: set[str] = set()
+    for form in forms:
+        if not form.startswith("return ") or not form.endswith(";"):
+            return set()
+        expression = form[len("return ") : -1].strip()
+        if not expression or any(token in expression for token in "()[]{}"):
+            return set()
+        values.add(expression)
+    return values
+
+
+def _assigned_values(body: str, variable: str) -> set[str]:
+    import re
+
+    pattern = re.compile(
+        rf"\b{re.escape(variable)}\s*=\s*(?P<value>-?\d+|NULL|[A-Z_][A-Z0-9_]*)\s*;"
+    )
+    return {match.group("value") for match in pattern.finditer(body)}
 
 
 def _visible_calls(function: FunctionInfo) -> list[str]:

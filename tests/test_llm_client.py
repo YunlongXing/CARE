@@ -103,3 +103,31 @@ class LLMClientTests(unittest.TestCase):
         self.assertEqual(captured["body"]["temperature"], 0.3)
         self.assertEqual(captured["body"]["messages"][0]["content"], "hello")
         self.assertEqual(captured["timeout"], 7)
+
+    def test_responses_api_parses_output_and_records_usage(self) -> None:
+        captured = {}
+
+        def fake_urlopen(request, timeout):
+            captured["body"] = json.loads(request.data.decode("utf-8"))
+            return FakeResponse(
+                {
+                    "output": [{"content": [{"type": "output_text", "text": "review"}]}],
+                    "usage": {"input_tokens": 11, "output_tokens": 7},
+                }
+            )
+
+        client = OpenAICompatibleClient(
+            api_key="secret",
+            model="gpt-test",
+            base_url="https://example.test/responses",
+            api_style="responses",
+            reasoning_effort="medium",
+            max_output_tokens=100,
+        )
+        with patch("urllib.request.urlopen", fake_urlopen):
+            result = client.complete("hello")
+
+        self.assertEqual(result, "review")
+        self.assertEqual(captured["body"]["input"], "hello")
+        self.assertEqual(captured["body"]["reasoning"]["effort"], "medium")
+        self.assertEqual(client.last_usage["input_tokens"], 11)

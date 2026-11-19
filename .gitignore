@@ -41,6 +41,24 @@ benchmarks/openssl_top5_llm_realval/
 benchmarks/openssl_x509_sample/
 benchmarks/openssl_x509_unsafe_sample/
 benchmarks/oss50/
+benchmarks/patch_safety/mined/
+benchmarks/patch_safety/review/
+benchmarks/patch_safety/results/
+benchmarks/patch_safety/history/
+benchmarks/patch_safety/real/
+benchmarks/patch_safety/agent_review/
+benchmarks/patch_safety/mutations/
+benchmarks/patch_safety/mined_*/
+benchmarks/patch_safety/review_*/
+benchmarks/patch_safety/real_*/
+benchmarks/patch_safety/mutations_*/
+benchmarks/patch_safety/results_*/
+benchmarks/patch_safety/agent_review_*/
+
+# Large frozen experiment data are packaged locally for handoff. Metadata and
+# reproduction notes under artifacts/frozen/ remain versioned.
+artifacts/frozen/*/data/
+artifacts/frozen/*/*.tar.gz
 
 # Keep the lightweight benchmark profile manifest.
 !benchmarks/

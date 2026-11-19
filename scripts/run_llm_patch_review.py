@@ -1,7 +1,7 @@
-"""Run LLM-assisted patch review and build Table 3.
+"""Run secondary LLM-assisted patch triage and build Table 3.
 
-The reviewer is intentionally framed as a simulated expert reviewer. It audits
-patches that passed validation for likely correctness, and classifies failed
+This triage is not a substitute for independent human review. It audits patches
+that passed validation for obvious correctness concerns and classifies failed
 candidates into failure categories using the patch and validator evidence.
 """
 
@@ -251,9 +251,10 @@ def review_failed_patches(
 def build_passed_review_prompt(record: dict[str, Any]) -> str:
     payload = review_record_payload(record, include_diff_chars=6000)
     return (
-        "You are simulating a careful senior C/C++ security reviewer for a research artifact.\n"
-        "Review the patch that already passed the automated validator. Judge whether the patch is truly "
-        "behavior-preserving and security-preserving based on the opportunity, diff, and validation summary.\n\n"
+        "You are performing a secondary LLM-assisted triage for a C/C++ security research artifact.\n"
+        "This triage is not a substitute for independent human review. Review the patch that already "
+        "passed the automated validator and flag obvious behavior or security concerns based on the "
+        "opportunity, diff, and validation summary.\n\n"
         "Return JSON only with this schema:\n"
         "{\n"
         '  "verdict": "correct|likely_correct|incorrect|uncertain",\n'
@@ -270,8 +271,9 @@ def build_passed_review_prompt(record: dict[str, Any]) -> str:
 def build_failed_review_prompt(records: list[dict[str, Any]]) -> str:
     payload = [review_record_payload(record, include_diff_chars=2500) for record in records]
     return (
-        "You are simulating a careful senior C/C++ security reviewer for a research artifact.\n"
-        "Classify why each patch candidate failed validation, and judge whether accepting it would be safe.\n\n"
+        "You are performing a secondary LLM-assisted triage for a C/C++ security research artifact.\n"
+        "This triage is not a substitute for independent human review. Classify why each patch candidate "
+        "failed validation and whether accepting it would be safe.\n\n"
         "Allowed failure_category values:\n"
         f"{', '.join(FAILURE_CATEGORIES)}\n\n"
         "Return JSON only with this schema:\n"
@@ -514,7 +516,7 @@ def write_table3_markdown(
     failure_rows: list[dict[str, Any]],
 ) -> None:
     lines = [
-        "# Table 3: LLM-Assisted Patch Review",
+        "# Table 3: Secondary LLM-Assisted Patch Triage",
         "",
         "## Passed Patch Correctness",
         "",
@@ -555,7 +557,7 @@ def write_table3_markdown(
     lines.extend(
         [
             "",
-            "Note: this is simulated expert review by an LLM, not a substitute for independent human review.",
+            "Note: this is secondary LLM-assisted triage, not a substitute for independent human review.",
         ]
     )
     path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
@@ -590,7 +592,7 @@ def write_table3_latex(
         [
             "\\begin{table*}[t]",
             "    \\centering",
-            "    \\caption{LLM-assisted review of accepted and rejected patches.}",
+            "    \\caption{Secondary LLM-assisted triage of accepted and rejected patches.}",
             "    \\label{tab:llm-review}",
             "    \\begin{tabular}{lrrrrrrrr}",
             "        \\toprule",

@@ -1,0 +1,9 @@
+--- a/main.c
++++ b/main.c
+@@ -1,5 +1,5 @@
+ int score(char *p, int len) {
+-    if (!p)
++    if (0)
+         return -1;
+     if (len <= 0)
+         return -2;

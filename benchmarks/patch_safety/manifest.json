@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "name": "CARE patch-safety seed benchmark",
+  "cases": [
+    {
+      "id": "safe_cleanup_consolidation",
+      "kind": "semantic_preserving_refactoring",
+      "ground_truth": "safe",
+      "source_dir": "cases/safe_cleanup_consolidation",
+      "candidate_diff": "patches/safe_cleanup_consolidation.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_invariants": ["return values", "single free on each path"]
+    },
+    {
+      "id": "safe_duplicate_null_check_removal",
+      "kind": "semantic_preserving_refactoring",
+      "ground_truth": "safe",
+      "source_dir": "cases/safe_duplicate_null_check_removal",
+      "candidate_diff": "patches/safe_duplicate_null_check_removal.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_invariants": ["null guard remains", "return values"]
+    },
+    {
+      "id": "unsafe_null_check_removal",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "remove_null_check",
+      "source_dir": "cases/unsafe_null_check_removal",
+      "candidate_diff": "patches/unsafe_null_check_removal.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["null_check_removed"]
+    },
+    {
+      "id": "unsafe_disabled_null_guard",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "disable_null_guard",
+      "source_dir": "cases/unsafe_null_check_removal",
+      "candidate_diff": "patches/unsafe_disabled_null_guard.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["null_check_weakened"]
+    },
+    {
+      "id": "unsafe_disabled_bounds_guard",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "disable_bounds_guard",
+      "source_dir": "cases/unsafe_null_check_removal",
+      "candidate_diff": "patches/unsafe_disabled_bounds_guard.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["bounds_check_weakened"]
+    },
+    {
+      "id": "unsafe_disabled_allocation_guard",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "disable_allocation_guard",
+      "source_dir": "cases/unsafe_cleanup_removal",
+      "candidate_diff": "patches/unsafe_disabled_allocation_guard.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["allocation_failure_guard_weakened"]
+    },
+    {
+      "id": "unsafe_disabled_status_guard",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "disable_status_guard",
+      "source_dir": "cases/unsafe_status_guard",
+      "candidate_diff": "patches/unsafe_disabled_status_guard.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["status_error_guard_weakened"]
+    },
+    {
+      "id": "unsafe_cleanup_removal",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "remove_error_path_cleanup",
+      "source_dir": "cases/unsafe_cleanup_removal",
+      "candidate_diff": "patches/unsafe_cleanup_removal.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["cleanup_removed"]
+    },
+    {
+      "id": "unsafe_return_code_change",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "change_error_return",
+      "source_dir": "cases/unsafe_return_code_change",
+      "candidate_diff": "patches/unsafe_return_code_change.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["return_code_changed"]
+    },
+    {
+      "id": "unsafe_double_free",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "add_double_release",
+      "source_dir": "cases/unsafe_double_free",
+      "candidate_diff": "patches/unsafe_double_free.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["double_free"]
+    },
+    {
+      "id": "unsafe_api_regression",
+      "kind": "unsafe_mutant",
+      "ground_truth": "unsafe",
+      "mutation_operator": "replace_bounded_copy",
+      "source_dir": "cases/unsafe_api_regression",
+      "candidate_diff": "patches/unsafe_api_regression.diff",
+      "build_cmd": "make",
+      "test_cmd": "make test",
+      "expected_violations": ["unsafe_api_introduced"]
+    }
+  ]
+}

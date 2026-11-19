@@ -10,7 +10,9 @@ from care.core.models import FunctionInfo, PatchCandidate, StageResult
 from care.core.project import ProjectLoader
 from care.validation.compiler import CompileChecker
 from care.validation.resource_checker import ResourceConsistencyChecker
+from care.validation.resource_checker import _new_resource_issues
 from care.validation.security_checker import SecurityRegressionChecker
+from care.validation.security_checker import _check_counts
 from care.validation.semantic_checker import SemanticEquivalenceChecker
 from care.validation.static_analysis import StaticAnalysisRunner
 from care.validation.taxonomy import classify_validation_result
@@ -112,6 +114,44 @@ int f(int x) {
         self.assertFalse(result.passed)
         self.assertTrue(any("public signature changed" in item for item in result.counterexamples))
 
+    def test_semantic_checker_ignores_parentheses_only_return_reformatting(self) -> None:
+        before = [
+            FunctionInfo(
+                name="f",
+                file="main.c",
+                start_line=1,
+                end_line=1,
+                signature="int f(void)",
+                body="{ return(-1); }",
+                return_statements=["return(-1);"],
+                calls=[],
+            )
+        ]
+        after = [
+            FunctionInfo(
+                name="f",
+                file="main.c",
+                start_line=1,
+                end_line=1,
+                signature="int f(void)",
+                body="{ return -1; }",
+                return_statements=["return -1;"],
+                calls=[],
+            )
+        ]
+        result = SemanticEquivalenceChecker().run(
+            project=object(),
+            patch_candidate=_candidate(""),
+            before_functions=before,
+            after_functions=after,
+        )
+        self.assertTrue(result.passed)
+
+    def test_resource_checker_ignores_preexisting_issue_shifted_by_patch(self) -> None:
+        after = ["f: p acquired via alloc at line 15 lacks matching free"]
+        before = ["f: p acquired via alloc at line 10 lacks matching free"]
+        self.assertEqual(_new_resource_issues(after, before), [])
+
     def test_security_checker_detects_removed_null_check(self) -> None:
         before = [
             FunctionInfo(
@@ -147,6 +187,109 @@ int f(int x) {
 
         self.assertFalse(result.passed)
         self.assertTrue(any("null_checks decreased" in item for item in result.counterexamples))
+
+    def test_security_checker_counts_bounds_variable_on_either_side(self) -> None:
+        function = FunctionInfo(
+            name="f",
+            file="main.c",
+            start_line=1,
+            end_line=3,
+            signature="int f(int len)",
+            body="{ if (len <= 0) return -1; return 0; }",
+            return_statements=["return -1;", "return 0;"],
+            calls=[],
+        )
+        self.assertEqual(_check_counts(function)["bounds_checks"], 1)
+
+    def test_security_checker_counts_status_error_guard(self) -> None:
+        function = FunctionInfo(
+            name="f",
+            file="main.c",
+            start_line=1,
+            end_line=3,
+            signature="int f(int status)",
+            body="{ if (status != 0) return -1; return 0; }",
+            return_statements=["return -1;", "return 0;"],
+            calls=[],
+        )
+        self.assertEqual(_check_counts(function)["status_checks"], 1)
+
+    def test_security_checker_allows_safe_duplicate_null_check_removal(self) -> None:
+        before = [
+            FunctionInfo(
+                name="f",
+                file="main.c",
+                start_line=1,
+                end_line=8,
+                signature="int f(char *p)",
+                body="""{
+if (!p) return -1;
+if (!p) return -1;
+return 0;
+}""",
+                return_statements=["return -1;", "return -1;", "return 0;"],
+                calls=[],
+            )
+        ]
+        after = [
+            FunctionInfo(
+                name="f",
+                file="main.c",
+                start_line=1,
+                end_line=7,
+                signature="int f(char *p)",
+                body="""{
+if (!p) return -1;
+return 0;
+}""",
+                return_statements=["return -1;", "return 0;"],
+                calls=[],
+            )
+        ]
+
+        result = SecurityRegressionChecker().run(
+            project=object(),
+            patch_candidate=_candidate(""),
+            before_functions=before,
+            after_functions=after,
+        )
+
+        self.assertTrue(result.passed)
+
+    def test_semantic_checker_allows_return_variable_cleanup_rewrite(self) -> None:
+        before = [
+            FunctionInfo(
+                name="f",
+                file="main.c",
+                start_line=1,
+                end_line=5,
+                signature="int f(int failed)",
+                body="{ if (failed) return -2; return 0; }",
+                return_statements=["return -2;", "return 0;"],
+                calls=["free", "free"],
+            )
+        ]
+        after = [
+            FunctionInfo(
+                name="f",
+                file="main.c",
+                start_line=1,
+                end_line=6,
+                signature="int f(int failed)",
+                body="{ int result = 0; if (failed) { result = -2; goto out; } out: free(0); return result; }",
+                return_statements=["return result;"],
+                calls=["free"],
+            )
+        ]
+
+        result = SemanticEquivalenceChecker().run(
+            project=object(),
+            patch_candidate=_candidate(""),
+            before_functions=before,
+            after_functions=after,
+        )
+
+        self.assertTrue(result.passed)
 
     def test_refactoring_validator_restores_applies_and_aggregates(self) -> None:
         self.write(
