@@ -1,6 +1,12 @@
 {
   "freeze_name": "CARE-2026-11-19",
-  "status": "pending_system_commit",
+  "status": "frozen",
+  "system_tag": "care-freeze-2026-11-19",
+  "system_commit": "ff67e0a",
+  "verification": {
+    "test_command": ".venv/bin/python -m pytest -q",
+    "test_result": "125 passed"
+  },
   "python_requirement": ">=3.9",
   "primary_dataset": {
     "safe_developer_patches": 33,
@@ -18,5 +24,6 @@
     "unsafe_variants": 5,
     "result_directory": "data/results_security_v1"
   },
-  "integrity_manifest": "data.sha256"
+  "integrity_manifest": "data.sha256",
+  "data_archive": "CARE-2026-11-19-data.tar.gz"
 }
